@@ -183,4 +183,19 @@ app.get("/captcha-proxy", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+// АВТООЧИСТКА: Удаляем временные файлы каждые 10 минут
+setInterval(() => {
+    fs.readdir(uploadDir, (err, files) => {
+        if (err) return;
+        files.forEach(file => {
+            const filePath = path.join(uploadDir, file);
+            fs.stat(filePath, (err, stat) => {
+                if (err) return;
+                if (Date.now() - stat.mtimeMs > 10 * 60 * 1000) { // 10 минут
+                    fs.unlink(filePath, () => console.log(`[Очистка] Удален старый файл: ${file}`));
+                }
+            });
+        });
+    });
+}, 10 * 60 * 1000);
 app.listen(PORT, () => console.log(`--- СЕРВЕР ЗАПУЩЕН НА ПОРТУ ${PORT} ---`));
