@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=no, viewport-fit=cover">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; font-src 'self' https:; img-src 'self' data: https:; connect-src *;">
+
+    <title>VK Drive PRO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+
+    <style>
+        body { 
+            font-family: 'Roboto', sans-serif; background-color: #f7f9fc; color: #3c4043;
+            padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .breadcrumb-item:not(:last-child)::after { content: '›'; margin: 0 8px; color: #9ca3af; font-size: 18px; }
+        .touch-target { min-height: 44px; min-width: 44px; display: flex; align-items: center; justify-content: center; transition: opacity 0.2s; }
+        .touch-target:active { opacity: 0.5; }
+        #breadcrumb::-webkit-scrollbar { display: none; }
+        .file-card { transition: transform 0.1s; }
+        .file-card:active { transform: scale(0.98); }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .animate-spin-once { animation: spin 0.5s linear; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- МОДАЛКА КАПЧИ -->
+    <div id="captchaModal" class="hidden fixed inset-0 flex items-center justify-center p-6 z-[1000] backdrop-blur-sm bg-black/40">
+        <div class="bg-white rounded-[2rem] p-8 w-full max-w-sm shadow-2xl text-center relative">
+            <h3 class="text-xl font-bold mb-6">Проверка</h3>
+            <img id="captchaImg" src="" class="rounded-lg mb-6 mx-auto border">
+            <input type="text" id="captchaInput" placeholder="Код" class="w-full p-4 bg-gray-50 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 mb-6 font-bold text-center text-2xl tracking-widest uppercase">
+            <button id="captchaSubmit" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold active:scale-95 transition">Готово</button>
+        </div>
+    </div>
+
+    <!-- ВЕРХНЯЯ ПАНЕЛЬ -->
+    <nav class="bg-white border-b border-gray-100 sticky top-0 z-50 px-5 py-3 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2 cursor-pointer" onclick="goToRoot()">
+                <div class="text-blue-500"><i data-lucide="cloud" class="w-7 h-7"></i></div>
+                <span class="text-xl font-bold tracking-tight">VK Drive</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="fetchFiles(this)" class="touch-target text-gray-400 hover:text-blue-500">
+                    <i data-lucide="rotate-cw" class="w-5 h-5"></i>
+                </button>
+                <button onclick="createFolder()" class="touch-target text-gray-400 hover:text-blue-500">
+                    <i data-lucide="folder-plus" class="w-6 h-6"></i>
+                </button>
+                <button onclick="document.getElementById('fileInput').click()" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-blue-200">
+                    Загрузить
+                </button>
+                <input type="file" id="fileInput" class="hidden" multiple onchange="handleFiles(this.files)">
+            </div>
+        </div>
+        <div class="relative">
+            <i data-lucide="search" class="absolute left-4 top-3 text-gray-400 w-4 h-4"></i>
+            <input type="text" id="searchInput" oninput="applyFilters()" placeholder="Поиск файлов..." class="w-full pl-11 pr-4 py-3 bg-gray-50 rounded-xl outline-none focus:bg-white focus:ring-2 focus:ring-blue-100 transition-all">
+        </div>
+    </nav>
+
+    <!-- ТУЛБАР / СОРТИРОВКА -->
+    <div class="bg-white border-b border-gray-100 px-5 py-2 flex items-center justify-between gap-4 sticky top-[116px] z-40">
+        <div id="breadcrumb" class="flex items-center text-xs font-bold text-gray-400 overflow-x-auto whitespace-nowrap"></div>
+        <select id="sortSelect" onchange="applyFilters()" class="text-[10px] font-bold bg-gray-50 px-2 py-1 rounded-lg border-none outline-none text-blue-600">
+            <option value="date_desc">Сначала новые</option>
+            <option value="date_asc">Сначала старые</option>
+            <option value="name_asc">По имени (А-Я)</option>
+        </select>
+    </div>
+
+    <!-- КАРТОЧКА ЗАГРУЗКИ -->
+    <div id="progressContainer" class="hidden fixed bottom-10 left-5 right-5 bg-white/90 backdrop-blur-md shadow-2xl rounded-2xl p-4 border border-blue-50 z-[100]">
+        <div class="flex justify-between items-center mb-2">
+            <span id="progressFileName" class="text-[10px] font-bold truncate w-40 text-gray-500 uppercase tracking-tighter">Загрузка...</span>
+            <span id="progressPercent" class="text-xs font-black text-blue-600">0%</span>
+        </div>
+        <div class="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+            <div id="progressBar" class="bg-blue-600 h-full w-0 transition-all duration-300"></div>
+        </div>
+    </div>
+
+    <!-- ГЛАВНЫЙ СПИСОК -->
+    <main class="p-5 max-w-4xl mx-auto min-h-[70vh]">
+        <div id="fileContainer" class="space-y-3">
+            <div class="py-20 text-center"><div class="animate-spin inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"></div></div>
+        </div>
+    </main>
+
+    <!-- ФУТЕР -->
+    <footer class="p-10 text-center">
+        <div id="pasteBtn" onclick="pasteItem()" class="hidden mb-6 bg-green-500 text-white px-6 py-3 rounded-2xl font-bold shadow-xl animate-bounce mx-auto cursor-pointer">
+            ВСТАВИТЬ СЮДА
+        </div>
+        <div class="inline-block bg-gray-100 text-gray-400 px-4 py-2 rounded-full text-[10px] font-bold tracking-widest">
+            ВЕРСИЯ: 1.1.2 (OPTIMIZED)
+        </div>
+    </footer>
+
+    <script>
+        const API_URL = 'https://my-vk-drive-backend.onrender.com';
+        const VK_PARAMS = window.location.search;
+        let currentPath = []; 
+        let allItems = [];
+        let clipboard = null;
+
+        vkBridge.send("VKWebAppInit");
+
+        window.onload = () => { fetchFiles(); lucide.createIcons(); };
+
+        async function fetchFiles(btn) {
+            if (btn) btn.classList.add('animate-spin-once');
+            try {
+                const res = await fetch(`${API_URL}/files${VK_PARAMS}`);
+                if (!res.ok) throw new Error();
+                allItems = await res.json();
+                applyFilters();
+            } catch (e) { 
+                document.getElementById('fileContainer').innerHTML = '<div class="py-20 text-center text-orange-400 font-bold">Сервер просыпается...</div>';
+                setTimeout(fetchFiles, 5000);
+            }
+            if (btn) setTimeout(() => btn.classList.remove('animate-spin-once'), 500);
+        }
+
+        function applyFilters() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const sort = document.getElementById('sortSelect').value;
+            const pathStr = currentPath.join('/');
+            
+            let folders = new Set(), files = [];
+
+            // 1. Фильтрация по пути и поиску
+            allItems.forEach(i => {
+                const t = i.title;
+                if (query) { 
+                    if (t.toLowerCase().includes(query)) files.push(i); 
+                } else {
+                    if (pathStr === "" && !t.includes('/')) files.push(i);
+                    else if (pathStr === "" && t.includes('/')) folders.add(t.split('/')[0]);
+                    else if (t.startsWith(pathStr + "/")) {
+                        const rel = t.substring(pathStr.length + 1);
+                        if (rel.includes('/')) folders.add(rel.split('/')[0]); else files.push(i);
+                    }
+                }
+            });
+
+            // 2. Сортировка файлов
+            files.sort((a, b) => {
+                if (sort === 'date_desc') return new Date(b.date || 0) - new Date(a.date || 0);
+                if (sort === 'date_asc') return new Date(a.date || 0) - new Date(b.date || 0);
+                if (sort === 'name_asc') return a.title.localeCompare(b.title);
+            });
+
+            render(Array.from(folders).sort(), files);
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return 'Дата неизвестна';
+            const date = new Date(dateStr);
+            return date.toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+        }
+
+        function render(folders, files) {
+            const container = document.getElementById('fileContainer');
+            container.innerHTML = '';
+            updateBreadcrumb();
+            
+            const fragment = document.createDocumentFragment();
+
+            folders.forEach(f => {
+                const div = document.createElement('div');
+                div.className = 'bg-white p-4 rounded-2xl flex items-center justify-between shadow-sm border border-gray-50 file-card';
+                div.onclick = (e) => { if (!e.target.closest('button')) { currentPath.push(f); applyFilters(); } };
+                div.innerHTML = `<div class="flex items-center gap-4"><div class="bg-blue-50 p-2 rounded-xl text-blue-500"><i data-lucide="folder" class="w-6 h-6 fill-current"></i></div><div><div class="font-bold text-gray-800 text-sm">${f}</div><div class="text-[9px] text-gray-400 uppercase font-black">Папка</div></div></div><div class="flex gap-1"><button onclick="renameItem('folder', '${f}')" class="touch-target text-gray-300"><i data-lucide="edit-2" class="w-4 h-4"></i></button><button onclick="startMove('folder', '${f}')" class="touch-target text-gray-300"><i data-lucide="scissors" class="w-4 h-4"></i></button></div>`;
+                fragment.appendChild(div);
+            });
+
+            files.forEach(file => {
+                const div = document.createElement('div');
+                div.className = 'bg-white p-4 rounded-2xl flex flex-col gap-3 shadow-sm border border-gray-50 file-card';
+                const name = file.title.split('/').pop();
+                div.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <div class="bg-gray-50 p-2 rounded-xl text-gray-400"><i data-lucide="file-text" class="w-6 h-6"></i></div>
+                            <div class="flex flex-col">
+                                <span class="font-bold text-gray-800 text-sm truncate w-40">${name}</span>
+                                <span class="text-[9px] text-blue-400 font-bold uppercase tracking-widest">${(file.size/1024/1024).toFixed(2)} МБ • ${formatDate(file.date)}</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="downloadFile('${file.url}', '${file.title}')" class="text-blue-500 bg-blue-50 p-2 rounded-lg"><i data-lucide="download" class="w-4 h-4"></i></button>
+                            <button onclick="deleteFile(${file.id})" class="text-red-400 bg-red-50 p-2 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 pt-2 border-t border-gray-50">
+                        <button onclick="renameItem('file', ${JSON.stringify(file).replace(/"/g, '&quot;')})" class="text-[10px] font-black text-gray-400 hover:text-blue-500 uppercase">Переименовать</button>
+                        <button onclick="startMove('file', ${JSON.stringify(file).replace(/"/g, '&quot;')})" class="text-[10px] font-black text-gray-400 hover:text-blue-500 uppercase">Перенести</button>
+                    </div>`;
+                fragment.appendChild(div);
+            });
+
+            if(!folders.length && !files.length) {
+                container.innerHTML = '<div class="py-20 text-center text-gray-300 font-bold italic">Здесь ничего нет</div>';
+            } else {
+                container.appendChild(fragment);
+            }
+            lucide.createIcons();
+        }
+
+        async function handleFiles(files) {
+            if (!files.length) return;
+            const container = document.getElementById('progressContainer');
+            container.classList.remove('hidden');
+            
+            for (const file of files) {
+                await new Promise((resolve) => {
+                    const fd = new FormData();
+                    fd.append('file', file);
+                    fd.append('folder_path', currentPath.join('/'));
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('POST', `${API_URL}/upload${VK_PARAMS}`, true);
+                    
+                    xhr.upload.onprogress = (e) => {
+                        const p = Math.round((e.loaded / e.total) * 100);
+                        document.getElementById('progressBar').style.width = p + '%';
+                        document.getElementById('progressPercent').innerText = p + '%';
+                        document.getElementById('progressFileName').innerText = file.name;
+                    };
+                    
+                    xhr.onload = () => resolve();
+                    xhr.onerror = () => { alert('Ошибка сети!'); resolve(); };
+                    xhr.send(fd);
+                });
+            }
+            container.classList.add('hidden');
+            fetchFiles();
+        }
+
+        // --- ВСЕ ОСТАЛЬНЫЕ ФУНКЦИИ (Удаление, Переименование, Перенос) ---
+        async function deleteFile(id) { if(confirm("Удалить файл навсегда?")) { await fetch(`${API_URL}/delete${VK_PARAMS}`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({doc_id:id})}); fetchFiles(); } }
+        
+        async function renameItem(type, item) {
+            let oldFull = type === 'file' ? item.title : (currentPath.length ? currentPath.join('/')+'/'+item : item);
+            let newName = prompt("Введите новое имя:", type === 'file' ? oldFull.split('/').pop() : item);
+            if (!newName) return;
+            let newFull = oldFull.split('/').slice(0,-1).concat(newName).join('/');
+            let toMove = [];
+            if (type === 'file') toMove.push({id: item.id, new_title: newFull});
+            else {
+                allItems.forEach(i => {
+                    if (i.title === oldFull) toMove.push({id: i.id, new_title: newFull});
+                    else if (i.title.startsWith(oldFull+'/')) toMove.push({id: i.id, new_title: newFull + i.title.substring(oldFull.length)});
+                });
+            }
+            await fetch(`${API_URL}/move${VK_PARAMS}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ items: toMove }) });
+            fetchFiles();
+        }
+
+        function startMove(type, item) { 
+            clipboard = { type, data: item, oldPath: currentPath.join('/') }; 
+            document.getElementById('pasteBtn').classList.remove('hidden'); 
+            vkBridge.send("VKWebAppTapticNotificationOccurred", {"type": "success"});
+        }
+        function cancelMove() { clipboard = null; document.getElementById('pasteBtn').classList.add('hidden'); }
+        
+        async function pasteItem() {
+            let newPath = currentPath.join('/'); let toMove = [];
+            if (clipboard.type === 'file') {
+                let name = clipboard.data.title.split('/').pop();
+                toMove.push({ id: clipboard.data.id, new_title: newPath ? `${newPath}/${name}` : name });
+            } else {
+                let fName = clipboard.data;
+                let oldPref = clipboard.oldPath ? clipboard.oldPath+'/'+fName : fName;
+                let newPref = newPath ? newPath+'/'+fName : fName;
+                allItems.forEach(i => {
+                    if (i.title === oldPref) toMove.push({id: i.id, new_title: newPref});
+                    else if (i.title.startsWith(oldPref+'/')) toMove.push({id: i.id, new_title: newPref + i.title.substring(oldPref.length)});
+                });
+            }
+            await fetch(`${API_URL}/move${VK_PARAMS}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ items: toMove }) });
+            cancelMove(); fetchFiles();
+        }
+
+        function updateBreadcrumb() {
+            const bc = document.getElementById('breadcrumb');
+            bc.innerHTML = `<span class="breadcrumb-item cursor-pointer" onclick="goToRoot()">МОЙ ДИСК</span>`;
+            let tmp = [];
+            currentPath.forEach(p => { 
+                tmp.push(p); const s = document.createElement('span'); s.className = 'breadcrumb-item cursor-pointer'; s.innerText = p.toUpperCase(); 
+                const snap = [...tmp]; s.onclick = () => { currentPath = snap; applyFilters(); }; bc.appendChild(s); 
+            });
+        }
+
+        function createFolder() { let n = prompt("Имя новой папки:"); if (n) { currentPath.push(n); applyFilters(); } }
+        function goToRoot() { currentPath = []; applyFilters(); }
+        function downloadFile(u, t) { window.open(`${API_URL}/download-proxy?url=${encodeURIComponent(u)}&title=${encodeURIComponent(t)}${VK_PARAMS.replace('?', '&')}`); }
+    </script>
+</body>
+</html>

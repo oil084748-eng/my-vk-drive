@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=no, viewport-fit=cover">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; font-src 'self' https:; img-src 'self' data: https:; connect-src *;">
+
+    <title>VK Drive PRO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+
+    <style>
+        body { 
+            font-family: 'Roboto', sans-serif; background-color: #f7f9fc; color: #3c4043;
+            padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .breadcrumb-item:not(:last-child)::after { content: '›'; margin: 0 8px; color: #9ca3af; font-size: 18px; }
+        .touch-target { min-height: 44px; min-width: 44px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .touch-target:active { opacity: 0.5; transform: scale(0.95); }
+        #breadcrumb::-webkit-scrollbar { display: none; }
+        .sticky-top-block { position: sticky; top: 0; z-index: 100; background-color: white; }
+        @keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+        .animate-slide-down { animation: slideDown 0.2s ease-out; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- МОДАЛКИ -->
+    <div id="customPrompt" class="hidden fixed inset-0 flex items-center justify-center p-6 z-[2000] backdrop-blur-sm bg-black/40">
+        <div class="bg-white rounded-[2rem] p-6 w-full max-w-sm shadow-2xl">
+            <h3 id="promptTitle" class="text-lg font-bold mb-4 text-center">Название</h3>
+            <input type="text" id="promptInput" class="w-full p-4 bg-gray-50 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 mb-6 font-medium text-center">
+            <div class="flex gap-3">
+                <button onclick="closePrompt()" class="flex-1 py-3 font-bold text-gray-400">Отмена</button>
+                <button id="promptConfirmBtn" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">ОК</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="customConfirm" class="hidden fixed inset-0 flex items-center justify-center p-6 z-[2000] backdrop-blur-sm bg-black/40">
+        <div class="bg-white rounded-[2rem] p-6 w-full max-w-sm shadow-2xl">
+            <h3 id="confirmTitle" class="text-lg font-bold mb-2 text-center">Удаление</h3>
+            <p id="confirmDesc" class="text-sm text-gray-500 text-center mb-6"></p>
+            <div class="flex gap-3">
+                <button onclick="closeConfirm()" class="flex-1 py-3 font-bold text-gray-400">Отмена</button>
+                <button id="confirmActionBtn" class="flex-1 bg-red-500 text-white py-3 rounded-xl font-bold uppercase text-xs tracking-widest">Удалить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ВЕРХНИЙ ЗАКРЕПЛЕННЫЙ БЛОК -->
+    <div class="sticky-top-block shadow-md">
+        <!-- Индикатор обработки (теперь тут!) -->
+        <div id="actionLoader" class="hidden bg-blue-600 text-white px-5 py-2.5 flex items-center justify-center animate-slide-down">
+            <div class="animate-spin w-3 h-3 border-2 border-white border-t-transparent rounded-full mr-3"></div>
+            <span id="actionLoaderText" class="text-[10px] font-black uppercase tracking-widest">Обработка...</span>
+        </div>
+
+        <nav class="px-5 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-2 cursor-pointer" onclick="goToRoot()">
+                <div class="text-blue-500"><i data-lucide="cloud" class="w-7 h-7"></i></div>
+                <span class="text-xl font-bold tracking-tight text-gray-700">Мой Диск</span>
+            </div>
+            <div class="flex items-center gap-1">
+                <button onclick="fetchFiles(this)" class="touch-target text-gray-400 hover:text-blue-500"><i data-lucide="rotate-cw" class="w-5 h-5"></i></button>
+                <button onclick="uiPrompt('Новая папка', '', (n) => createFolder(n))" class="touch-target text-gray-400 hover:text-blue-500"><i data-lucide="folder-plus" class="w-6 h-6"></i></button>
+                <button onclick="document.getElementById('fileInput').click()" class="bg-blue-600 text-white px-4 py-2 rounded-xl font-bold text-sm shadow-md">Загрузить</button>
+                <input type="file" id="fileInput" class="hidden" multiple onchange="handleFiles(this.files)">
+            </div>
+        </nav>
+
+        <div class="px-5 pb-3">
+            <div class="relative">
+                <i data-lucide="search" class="absolute left-4 top-3 text-gray-400 w-4 h-4"></i>
+                <input type="text" id="searchInput" oninput="applyFilters()" placeholder="Поиск файлов..." class="w-full pl-11 pr-4 py-3 bg-gray-50 rounded-xl outline-none text-sm">
+            </div>
+        </div>
+
+        <div id="pastePanel" class="hidden px-5 py-2 bg-green-50 border-y border-green-100">
+            <div class="flex items-center justify-between gap-3">
+                <button onclick="pasteItem()" class="flex-1 bg-green-600 text-white py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider">Вставить сюда</button>
+                <button onclick="cancelMove()" class="touch-target text-green-600 bg-white border border-green-200 rounded-xl px-3"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+        </div>
+
+        <div class="px-5 py-2 flex items-center justify-between gap-4 bg-white border-b border-gray-50 text-[10px] font-black text-gray-400 uppercase tracking-tighter">
+            <div id="breadcrumb" class="flex items-center overflow-x-auto whitespace-nowrap"></div>
+            <select id="sortSelect" onchange="applyFilters()" class="font-bold bg-gray-50 px-2 py-1 rounded-lg border-none outline-none text-blue-600">
+                <option value="date_desc">Новые</option>
+                <option value="date_asc">Старые</option>
+                <option value="name_asc">Имя</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- ЗАГРУЗКА ФАЙЛОВ -->
+    <div id="progressContainer" class="hidden fixed bottom-10 left-5 right-5 bg-white shadow-2xl rounded-2xl p-4 border border-blue-100 z-[100]">
+        <div class="flex justify-between items-center mb-2">
+            <span id="progressFileName" class="text-[10px] font-bold truncate w-40 text-gray-500 uppercase">Файл...</span>
+            <span id="progressPercent" class="text-xs font-black text-blue-600">0%</span>
+        </div>
+        <div class="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+            <div id="progressBar" class="bg-blue-600 h-full w-0 transition-all duration-300"></div>
+        </div>
+        <div id="uploadStatusText" class="text-[9px] text-gray-400 mt-2 text-center font-bold uppercase tracking-wider">Загрузка...</div>
+    </div>
+
+    <main class="p-5 max-w-4xl mx-auto min-h-[60vh]">
+        <div id="fileContainer" class="space-y-3"></div>
+    </main>
+
+    <footer class="p-10 text-center">
+        <div class="inline-block bg-blue-50 text-blue-600 px-4 py-2 rounded-full text-[10px] font-bold tracking-widest border border-blue-100">
+            ВЕРСИЯ: 1.2.0 (STICKY-LOADER)
+        </div>
+    </footer>
+
+    <script>
+        const API_URL = 'https://my-vk-drive-backend.onrender.com';
+        const VK_PARAMS = window.location.search;
+        let currentPath = []; 
+        let allItems = [];
+        let clipboard = null;
+
+        vkBridge.send("VKWebAppInit");
+        window.onload = () => { fetchFiles(); lucide.createIcons(); };
+
+        function uiPrompt(title, defVal, cb) {
+            document.getElementById('promptTitle').innerText = title;
+            document.getElementById('promptInput').value = defVal;
+            document.getElementById('customPrompt').classList.remove('hidden');
+            document.getElementById('promptInput').focus();
+            document.getElementById('promptConfirmBtn').onclick = () => {
+                const val = document.getElementById('promptInput').value;
+                if (val) cb(val);
+                closePrompt();
+            };
+        }
+        function closePrompt() { document.getElementById('customPrompt').classList.add('hidden'); }
+
+        function uiConfirm(title, desc, onAction) {
+            document.getElementById('confirmTitle').innerText = title;
+            document.getElementById('confirmDesc').innerText = desc;
+            document.getElementById('customConfirm').classList.remove('hidden');
+            document.getElementById('confirmActionBtn').onclick = () => { onAction(); closeConfirm(); };
+        }
+        function closeConfirm() { document.getElementById('customConfirm').classList.add('hidden'); }
+
+        function showActionLoader(show, text = "Обработка...") {
+            document.getElementById('actionLoaderText').innerText = text;
+            document.getElementById('actionLoader').classList.toggle('hidden', !show);
+        }
+
+        function formatDate(ts) {
+            if (!ts) return 'Неизвестно';
+            let d = new Date(ts < 10000000000 ? ts * 1000 : ts);
+            return d.toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        async function fetchFiles(btn) {
+            if (btn && btn.classList) btn.classList.add('animate-spin');
+            try {
+                const res = await fetch(`${API_URL}/files${VK_PARAMS}`);
+                allItems = await res.json();
+                applyFilters();
+            } catch (e) { 
+                document.getElementById('fileContainer').innerHTML = '<div class="py-20 text-center text-orange-400 font-bold text-xs uppercase">Сервер спит...</div>';
+            }
+            if (btn && btn.classList) setTimeout(() => btn.classList.remove('animate-spin'), 500);
+        }
+
+        function applyFilters() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const sort = document.getElementById('sortSelect').value;
+            const pathStr = currentPath.join('/');
+            let folders = new Set(), files = [];
+
+            allItems.forEach(i => {
+                const t = i.title;
+                if (query) { if (t.toLowerCase().includes(query)) files.push(i); }
+                else {
+                    if (pathStr === "" && !t.includes('/')) files.push(i);
+                    else if (pathStr === "" && t.includes('/')) folders.add(t.split('/')[0]);
+                    else if (t.startsWith(pathStr + "/")) {
+                        const rel = t.substring(pathStr.length + 1);
+                        if (rel.includes('/')) folders.add(rel.split('/')[0]); else files.push(i);
+                    }
+                }
+            });
+
+            files.sort((a, b) => {
+                if (sort === 'date_desc') return new Date(b.date || 0) - new Date(a.date || 0);
+                if (sort === 'date_asc') return new Date(a.date || 0) - new Date(b.date || 0);
+                return a.title.localeCompare(b.title);
+            });
+            render(Array.from(folders).sort(), files);
+        }
+
+        function render(folders, files) {
+            const container = document.getElementById('fileContainer');
+            container.innerHTML = '';
+            updateBreadcrumb();
+            const frag = document.createDocumentFragment();
+
+            folders.forEach(f => {
+                const div = document.createElement('div');
+                div.className = 'bg-white p-5 rounded-3xl flex flex-col gap-4 shadow-sm border border-gray-100';
+                div.innerHTML = `
+                    <div class="flex items-center gap-4 cursor-pointer" onclick="currentPath.push('${f}'); applyFilters();">
+                        <div class="bg-blue-50 p-3 rounded-2xl text-blue-500"><i data-lucide="folder" class="w-7 h-7 fill-current"></i></div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-bold text-gray-800 text-base truncate">${f}</div>
+                            <div class="text-[10px] text-gray-400 uppercase font-black">Папка</div>
+                        </div>
+                    </div>
+                    <div class="flex gap-5 px-1 uppercase text-[10px] font-black text-gray-400">
+                        <button onclick="uiPrompt('Имя папки', '${f}', (n) => renameItem('folder', '${f}', n))">Имя</button>
+                        <button onclick="startMove('folder', '${f}')">Перенос</button>
+                        <button onclick="uiConfirm('Удалить папку?', 'Все файлы внутри будут удалены.', () => deleteFolder('${f}'))" class="text-red-400">Удалить</button>
+                    </div>`;
+                frag.appendChild(div);
+            });
+
+            files.forEach(file => {
+                const div = document.createElement('div');
+                div.className = 'bg-white p-5 rounded-3xl flex flex-col gap-4 shadow-sm border border-gray-100';
+                const fName = file.title.split('/').pop();
+                div.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <div class="bg-gray-50 p-3 rounded-2xl text-gray-400"><i data-lucide="file-text" class="w-7 h-7"></i></div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-bold text-gray-800 text-base truncate pr-2">${fName}</div>
+                            <div class="text-[10px] text-blue-500 font-bold uppercase tracking-widest">${(file.size/1024/1024).toFixed(2)} МБ • ${formatDate(file.date)}</div>
+                        </div>
+                    </div>
+                    <div class="flex gap-5 px-1 uppercase text-[10px] font-black text-gray-400">
+                        <button onclick="uiPrompt('Имя файла', '${fName}', (n) => renameItem('file', ${JSON.stringify(file).replace(/"/g, '&quot;')}, n))">Имя</button>
+                        <button onclick="startMove('file', ${JSON.stringify(file).replace(/"/g, '&quot;')})">Перенос</button>
+                        <button onclick="downloadFile('${file.url}', '${file.title}')" class="text-blue-600">Скачать</button>
+                        <button onclick="uiConfirm('Удалить файл?', 'Это нельзя отменить.', () => deleteFile(${file.id}))" class="text-red-400">Удалить</button>
+                    </div>`;
+                frag.appendChild(div);
+            });
+
+            container.appendChild(frag);
+            if(!folders.length && !files.length) container.innerHTML = '<div class="py-20 text-center text-gray-300 font-bold italic">Пусто</div>';
+            lucide.createIcons();
+        }
+
+        async function handleFiles(files) {
+            if (!files.length) return;
+            const container = document.getElementById('progressContainer');
+            const statusText = document.getElementById('uploadStatusText');
+            container.classList.remove('hidden');
+            for (const f of files) {
+                await new Promise(r => {
+                    const fd = new FormData(); fd.append('file', f); fd.append('folder_path', currentPath.join('/'));
+                    const x = new XMLHttpRequest(); x.open('POST', `${API_URL}/upload${VK_PARAMS}`);
+                    x.upload.onprogress = (e) => {
+                        const p = Math.round((e.loaded/e.total)*100);
+                        document.getElementById('progressBar').style.width = p+'%';
+                        document.getElementById('progressPercent').innerText = p+'%';
+                        document.getElementById('progressFileName').innerText = f.name;
+                        statusText.innerText = p >= 100 ? "Сохранение в облако ВК..." : "Передача на сервер...";
+                    };
+                    x.onload = r; x.onerror = r; x.send(fd);
+                });
+            }
+            container.classList.add('hidden');
+            fetchFiles();
+        }
+
+        async function deleteFolder(fName) {
+            showActionLoader(true, "Удаление папки...");
+            const pref = currentPath.length ? currentPath.join('/')+'/'+fName : fName;
+            const list = allItems.filter(i => i.title === pref || i.title.startsWith(pref+'/'));
+            for (const i of list) await fetch(`${API_URL}/delete${VK_PARAMS}`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({doc_id: i.id}) });
+            await fetchFiles();
+            showActionLoader(false);
+        }
+
+        async function deleteFile(id) { 
+            showActionLoader(true, "Удаление файла...");
+            await fetch(`${API_URL}/delete${VK_PARAMS}`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({doc_id:id})}); 
+            await fetchFiles();
+            showActionLoader(false);
+        }
+
+        async function renameItem(type, item, newName) {
+            showActionLoader(true, "Переименование...");
+            let oldF = type === 'file' ? item.title : (currentPath.length ? currentPath.join('/')+'/'+item : item);
+            let newF = oldF.split('/').slice(0,-1).concat(newName).join('/');
+            let items = allItems.filter(i => i.title === oldF || (type === 'folder' && i.title.startsWith(oldF+'/')))
+                                .map(i => ({id: i.id, new_title: type === 'file' ? newF : newF + i.title.substring(oldF.length)}));
+            await fetch(`${API_URL}/move${VK_PARAMS}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ items }) });
+            await fetchFiles();
+            showActionLoader(false);
+        }
+
+        async function pasteItem() {
+            showActionLoader(true, "Перенос файлов...");
+            let nP = currentPath.join('/'); let items = [];
+            if (clipboard.type === 'file') items.push({ id: clipboard.data.id, new_title: nP ? `${nP}/${clipboard.data.title.split('/').pop()}` : clipboard.data.title.split('/').pop() });
+            else {
+                let oldP = clipboard.oldPath ? clipboard.oldPath+'/'+clipboard.data : clipboard.data;
+                let newP = nP ? nP+'/'+clipboard.data : clipboard.data;
+                items = allItems.filter(i => i.title === oldP || i.title.startsWith(oldP+'/')).map(i => ({id: i.id, new_title: newP + i.title.substring(oldP.length)}));
+            }
+            await fetch(`${API_URL}/move${VK_PARAMS}`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ items }) });
+            cancelMove(); await fetchFiles();
+            showActionLoader(false);
+        }
+
+        function createFolder(n) { currentPath.push(n); applyFilters(); }
+        function startMove(type, item) { clipboard = { type, data: item, oldPath: currentPath.join('/') }; document.getElementById('pastePanel').classList.remove('hidden'); }
+        function cancelMove() { clipboard = null; document.getElementById('pastePanel').classList.add('hidden'); }
+        function updateBreadcrumb() {
+            const bc = document.getElementById('breadcrumb');
+            bc.innerHTML = `<span class="breadcrumb-item cursor-pointer" onclick="goToRoot()">ДИСК</span>`;
+            let tmp = []; currentPath.forEach(p => { 
+                tmp.push(p); const s = document.createElement('span'); s.className = 'breadcrumb-item cursor-pointer'; s.innerText = p.toUpperCase(); 
+                const snap = [...tmp]; s.onclick = () => { currentPath = snap; applyFilters(); }; bc.appendChild(s); 
+            });
+        }
+        function goToRoot() { currentPath = []; applyFilters(); }
+        function downloadFile(u, t) { window.open(`${API_URL}/download-proxy?url=${encodeURIComponent(u)}&title=${encodeURIComponent(t)}${VK_PARAMS.replace('?', '&')}`); }
+    </script>
+</body>
+</html>
