@@ -114,7 +114,7 @@
 
     <footer class="p-10 text-center">
         <div class="inline-block bg-blue-50 text-blue-600 px-4 py-2 rounded-full text-[10px] font-bold tracking-widest border border-blue-100">
-            ВЕРСИЯ: 1.2.1 (MAX-OPTIMIZED)
+            ВЕРСИЯ: 1.2.3 (MAX-OPTIMIZED)
         </div>
     </footer>
 
@@ -283,17 +283,27 @@
             fetchFiles();
         }
 
-        async function deleteFolder(fName) {
-            showActionLoader(true, "Удаление...");
-            const pref = currentPath.length ? currentPath.join('/')+'/'+fName : fName;
-            const list = allItems.filter(i => i.title === pref || i.title.startsWith(pref+'/'));
-            // Оптимистичное удаление из UI
-            allItems = allItems.filter(i => !(i.title === pref || i.title.startsWith(pref+'/')));
-            applyFilters();
-            
-            for (const i of list) await fetch(`${API_URL}/delete${VK_PARAMS}`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({doc_id: i.id}) });
-            showActionLoader(false);
+        async function fetchFiles(btn) {
+    if (btn && btn.classList) btn.classList.add('animate-spin');
+    try {
+        const res = await fetch(`${API_URL}/files${VK_PARAMS}`);
+        const data = await res.json();
+        
+        if (data.error) {
+            // Мгновенно выводим ошибку на экран для диагностики
+            document.getElementById('fileContainer').innerHTML = 
+                `<div class="p-5 text-red-500 font-bold text-center bg-red-50 rounded-2xl">
+                    ОШИБКА ВК: ${JSON.stringify(data.error)}
+                </div>`;
+            return;
         }
+
+        allItems = Array.isArray(data) ? data : [];
+        applyFilters();
+    } catch (e) { 
+        document.getElementById('fileContainer').innerHTML = '<div class="text-center font-bold">Офлайн или ошибка сервера</div>';
+    }
+}
 
         async function deleteFile(id) { 
             showActionLoader(true, "Удаление...");
