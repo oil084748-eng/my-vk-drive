@@ -52,21 +52,6 @@
         </div>
     </div>
 
-    <!-- ОКНО КАПЧИ -->
-    <div id="captchaModal" class="hidden fixed inset-0 flex items-center justify-center p-6 z-[3000] backdrop-blur-sm bg-black/50">
-        <div class="bg-white rounded-[2rem] p-6 w-full max-w-sm shadow-2xl text-center">
-            <h3 class="text-lg font-bold mb-4">ВК просит капчу</h3>
-            <div class="bg-gray-50 p-2 rounded-xl mb-4 min-h-[80px] flex items-center justify-center border border-gray-200">
-                <img id="captchaImg" src="" class="max-w-full rounded-lg" alt="Загрузка капчи...">
-            </div>
-            <input type="text" id="captchaInput" placeholder="Введите код с картинки" class="w-full p-4 bg-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 mb-6 font-bold text-center tracking-widest text-lg">
-            <div class="flex gap-3">
-                <button onclick="closeCaptcha()" class="flex-1 py-3 font-bold text-gray-400">Пропустить</button>
-                <button id="captchaSubmitBtn" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">Отправить</button>
-            </div>
-        </div>
-    </div>
-
     <!-- ВЕРХНЯЯ ПАНЕЛЬ -->
     <div class="sticky-top-block shadow-md">
         <div id="actionLoader" class="hidden bg-blue-600 text-white px-5 py-2.5 flex items-center justify-center animate-slide-down">
@@ -313,61 +298,62 @@ async function handleFiles(files) {
             fetchFiles();
         }
 
-        async function uploadSingleFile(file, folderPath, captchaSid = '', captchaKey = '') {
-            return new Promise((resolve) => {
-                const fd = new FormData(); 
-                fd.append('file', file); 
-                fd.append('folder_path', folderPath);
-                if (captchaSid) {
-                    fd.append('captcha_sid', captchaSid);
-                    fd.append('captcha_key', captchaKey);
-                }
+async function uploadSingleFile(file, folderPath) {
+            return new Promise(async (resolve) => {
+                try {
+                    // 1. Просим у нашего сервера (Render) индивидуальную ссылку для загрузки
+                    const urlRes = await fetch(`${API_URL}/get-upload-url${VK_PARAMS}`);
+                    const urlData = await urlRes.json();
 
-                const x = new XMLHttpRequest(); 
-                x.open('POST', `${API_URL}/upload${VK_PARAMS}`);
-                
-                x.upload.onprogress = (e) => {
-                    const p = Math.round((e.loaded/e.total)*100);
-                    document.getElementById('progressBar').style.width = p+'%';
-                    document.getElementById('progressPercent').innerText = p+'%';
-                    document.getElementById('progressFileName').innerText = file.name;
-                    document.getElementById('uploadStatusText').innerText = p >= 100 ? "Сохранение в ВК..." : "Отправка...";
-                };
-
-                x.onload = async () => {
-                    if (x.status === 403) {
-                        // Сервер поймал капчу!
-                        const res = JSON.parse(x.responseText);
-                        showCaptcha(res.captcha_sid, res.captcha_img, file, folderPath, resolve);
-                    } else {
-                        resolve(); // Успешно или другая ошибка, идем дальше
+                    if (!urlData.upload_url) {
+                        console.error("Не удалось получить ссылку от ВК");
+                        return resolve(); // Пропускаем файл при ошибке
                     }
-                };
-                x.onerror = resolve; 
-                x.send(fd);
+
+                    // 2. Телефон САМ отправляет файл напрямую на сервера ВКонтакте!
+                    const fd = new FormData();
+                    fd.append('file', file);
+
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('POST', urlData.upload_url);
+
+                    // Рисуем красивый прогресс-бар
+                    xhr.upload.onprogress = (e) => {
+                        const p = Math.round((e.loaded / e.total) * 100);
+                        document.getElementById('progressBar').style.width = p + '%';
+                        document.getElementById('progressPercent').innerText = p + '%';
+                        document.getElementById('progressFileName').innerText = file.name;
+                        document.getElementById('uploadStatusText').innerText = 
+                            p >= 100 ? "Финальное сохранение..." : "Прямая отправка в ВК...";
+                    };
+
+                    // 3. ВК принял файл и прислал нам его временный код
+                    xhr.onload = async () => {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            const vkRes = JSON.parse(xhr.responseText);
+                            
+                            // 4. Отправляем этот код на наш сервер, чтобы он разложил всё по папкам
+                            const saveFd = new FormData();
+                            saveFd.append('file_data', vkRes.file); // Тот самый код от ВК
+                            saveFd.append('file_name', file.name);
+                            saveFd.append('folder_path', folderPath);
+
+                            await fetch(`${API_URL}/save-file${VK_PARAMS}`, {
+                                method: 'POST',
+                                body: saveFd
+                            });
+                        }
+                        resolve(); // Переходим к следующему файлу
+                    };
+
+                    xhr.onerror = () => resolve();
+                    xhr.send(fd);
+
+                } catch (e) {
+                    console.error("Ошибка при загрузке:", e);
+                    resolve();
+                }
             });
-        }
-
-        function showCaptcha(sid, imgUrl, file, folderPath, resolveFunc) {
-            document.getElementById('captchaModal').classList.remove('hidden');
-            document.getElementById('captchaInput').value = '';
-            document.getElementById('captchaImg').src = ''; // Очищаем старую
-            
-            // Используем наш прокси, чтобы картинка точно загрузилась
-            fetch(`${API_URL}/captcha-proxy?src=${encodeURIComponent(imgUrl)}${VK_PARAMS.replace('?', '&')}`)
-                .then(r => r.json())
-                .then(d => { document.getElementById('captchaImg').src = d.data; });
-
-            document.getElementById('captchaSubmitBtn').onclick = () => {
-                const key = document.getElementById('captchaInput').value;
-                document.getElementById('captchaModal').classList.add('hidden');
-                // Повторяем загрузку этого же файла, но уже с ключом капчи
-                uploadSingleFile(file, folderPath, sid, key).then(resolveFunc);
-            };
-        }
-
-        function closeCaptcha() {
-            document.getElementById('captchaModal').classList.add('hidden');
         }
 
         async function deleteFolder(fName) {

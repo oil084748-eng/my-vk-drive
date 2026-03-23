@@ -78,44 +78,49 @@ app.get("/files", async (req, res) => {
     }
 });
 
-// ЗАГРУЗКА ФАЙЛА
-app.post("/upload", upload.single("file"), async (req, res) => {
+// НОВЫЙ МЕТОД 1: Выдаем телефону прямую ссылку для загрузки в ВК
+app.get('/get-upload-url', async (req, res) => {
     try {
-        const { folder_path = "", captcha_sid, captcha_key } = req.body;
-        const originalName = Buffer.from(req.file.originalname, 'latin1').toString('utf8');
-        const finalTitle = folder_path ? `${folder_path}/${originalName}` : originalName;
-
-        console.log(`--> Загрузка файла: ${finalTitle}`);
-
-        let serverUrl = `https://api.vk.com/method/docs.getUploadServer?group_id=${GROUP_ID}&access_token=${VK_TOKEN}&v=5.131`;
-        if (captcha_sid) serverUrl += `&captcha_sid=${captcha_sid}&captcha_key=${captcha_key}`;
-
-        const serverRes = await requestWithRetry({ method: 'get', url: serverUrl });
-        
-        if (serverRes.data.error && serverRes.data.error.error_code === 14) {
-            console.log("!!! ТРЕБУЕТСЯ КАПЧА");
-            return res.status(403).json(serverRes.data.error);
-        }
-
-        const form = new FormData();
-        form.append("file", fs.createReadStream(req.file.path), { filename: originalName });
-        
-        const uploadRes = await axios.post(serverRes.data.response.upload_url, form, { headers: form.getHeaders() });
-
-        const saveRes = await requestWithRetry({
-            method: 'post',
-            url: "https://api.vk.com/method/docs.save",
-            data: `file=${uploadRes.data.file}&title=${encodeURIComponent(finalTitle)}&access_token=${VK_TOKEN}&v=5.131`,
-            headers: { "Content-Type": "application/x-www-form-urlencoded" }
+        // Запрашиваем ссылку у ВК
+        const response = await axios.get('https://api.vk.com/method/docs.getUploadServer', {
+            params: {
+                access_token: VK_TOKEN,
+                v: '5.131',
+                group_id: GROUP_ID // <-- ВОТ ТУТ УБРАЛИ СЛЕШИ И ДОБАВИЛИ ЗАПЯТУЮ СТРОКОЙ ВЫШЕ
+            }
         });
-
-        if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
         
-        console.log("<-- Файл успешно сохранен");
-        res.json(saveRes.data.response);
-    } catch (e) { 
-        console.error("!!! ОШИБКА ЗАГРУЗКИ:", e.message);
-        res.status(500).json({ error: e.message }); 
+        if (response.data.response && response.data.response.upload_url) {
+            res.json({ upload_url: response.data.response.upload_url });
+        } else {
+            res.status(400).json({ error: 'ВК не дал ссылку' });
+        }
+    } catch (error) {
+        console.error('Ошибка получения ссылки:', error.message);
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
+});
+
+// НОВЫЙ МЕТОД 2: Сохраняем файл в ВК после того, как телефон его туда закинул
+app.post('/save-file', upload.none(), async (req, res) => {
+    try {
+        const { file_data, file_name, folder_path } = req.body;
+        
+        // Говорим ВК окончательно сохранить файл с нужным именем и тегом (папкой)
+        const saveResponse = await axios.post('https://api.vk.com/method/docs.save', null, {
+            params: {
+                file: file_data,
+                title: file_name,
+                tags: folder_path, // Мы используем теги для имитации папок
+                access_token: VK_TOKEN, // <-- Убедись, что тут имя твоей переменной с токеном
+                v: '5.131'
+            }
+        });
+        
+        res.json({ success: true, data: saveResponse.data });
+    } catch (error) {
+        console.error('Ошибка сохранения файла:', error.message);
+        res.status(500).json({ error: 'Ошибка сохранения' });
     }
 });
 
@@ -171,31 +176,5 @@ app.get("/download-proxy", async (req, res) => {
         response.data.pipe(res);
     } catch (e) { res.status(500).send("Error"); }
 });
-
-// КАПЧА-ПРОКСИ
-app.get("/captcha-proxy", async (req, res) => {
-    try {
-        let { src } = req.query;
-        const response = await axios.get(src, { responseType: 'arraybuffer' });
-        const base64 = Buffer.from(response.data, 'binary').toString('base64');
-        res.json({ data: `data:${response.headers['content-type']};base64,${base64}` });
-    } catch (e) { res.status(500).json({ error: "Captcha fail" }); }
-});
-
 const PORT = process.env.PORT || 3000;
-// АВТООЧИСТКА: Удаляем временные файлы каждые 10 минут
-setInterval(() => {
-    fs.readdir(uploadDir, (err, files) => {
-        if (err) return;
-        files.forEach(file => {
-            const filePath = path.join(uploadDir, file);
-            fs.stat(filePath, (err, stat) => {
-                if (err) return;
-                if (Date.now() - stat.mtimeMs > 10 * 60 * 1000) { // 10 минут
-                    fs.unlink(filePath, () => console.log(`[Очистка] Удален старый файл: ${file}`));
-                }
-            });
-        });
-    });
-}, 10 * 60 * 1000);
 app.listen(PORT, () => console.log(`--- СЕРВЕР ЗАПУЩЕН НА ПОРТУ ${PORT} ---`));
