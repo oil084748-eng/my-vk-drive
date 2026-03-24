@@ -18,19 +18,19 @@ if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir);
 }
 
-// === НАСТРОЙКИ ===
+// === НАСТРОЙКИ (Сохранены из твоего оригинала) ===
 const VK_TOKEN = "vk1.a.9IWAg6xUmeHq-2qOjlrAG2nNpYS4s0GYkUrKu8lMwXmrhUSgQnpgdj0cmZrRS13ZwtenBW3dPGW2xZtlpkWchwprwx9rTK1LM0jRpkWd6Xs6eGQgOPJPDfyydEFCiI1vSUXW8JMsk-tDk6h3ujaB8uAdRoXae0seS9CUM6EI53b3ILCTytawu-bJC92CuGWN7hcA3z4rmPUU7nmk02yQcg";
 const GROUP_ID = "236017708"; 
 
 const upload = multer({ dest: "uploads/" });
 
-// Логгер запросов (поможет увидеть активность в панели Render)
+// Логгер запросов
 app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
     next();
 });
 
-// Получение списка файлов
+// Получение списка файлов (Добавлена обработка tags)
 app.get("/files", async (req, res) => {
     try {
         console.log("--> Запрос списка файлов из ВК...");
@@ -48,7 +48,7 @@ app.get("/files", async (req, res) => {
             return res.status(400).json({ error: response.data.error.error_msg });
         }
 
-        console.log(`<-- Получено файлов: ${response.data.response ? response.data.response.items.length : 0}`);
+        // Передаем данные как есть, фронтенд сам разберется с полем tags
         res.json(response.data.response ? response.data.response.items : []);
     } catch (e) { 
         console.error("!!! Критическая ошибка /files:", e.message);
@@ -56,43 +56,39 @@ app.get("/files", async (req, res) => {
     }
 });
 
-// Загрузка файла
+// Загрузка файла (Теперь путь пишется в tags)
 app.post("/upload", upload.single("file"), async (req, res) => {
     try {
         if (!req.file) return res.status(400).json({ error: "Файл не получен" });
         
         const { folder_path = "" } = req.body;
         const originalName = Buffer.from(req.file.originalname, 'latin1').toString('utf8');
-        const finalTitle = folder_path ? `${folder_path}/${originalName}` : originalName;
+        
+        // Название теперь ВСЕГДА чистое, без папок
+        const finalTitle = originalName;
 
-        console.log(`--> Загрузка файла: ${finalTitle}`);
+        console.log(`--> Загрузка файла: ${finalTitle} в папку (метку): ${folder_path}`);
 
         const serverRes = await axios.get(`https://api.vk.com/method/docs.getUploadServer`, {
             params: { group_id: GROUP_ID, access_token: VK_TOKEN, v: "5.131" }
         });
 
-        if (serverRes.data.error && serverRes.data.error.error_code === 14) {
-            console.warn("!!! ВК требует капчу");
-            if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-            return res.status(403).json({ error: 'captcha_needed', captcha_img: serverRes.data.error.captcha_img });
-        }
-
         const form = new FormData();
         form.append("file", fs.createReadStream(req.file.path), { filename: originalName });
         const uploadRes = await axios.post(serverRes.data.response.upload_url, form, { headers: form.getHeaders() });
 
+        // Сохранение: путь уходит в tags
         await axios.post("https://api.vk.com/method/docs.save", null, {
             params: { 
                 file: uploadRes.data.file, 
                 title: finalTitle, 
-                tags: folder_path, 
+                tags: folder_path, // ПУТЬ ТЕПЕРЬ ТУТ
                 access_token: VK_TOKEN, 
                 v: "5.131" 
             }
         });
 
         if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-        console.log("Успешно сохранено!");
         res.json({ success: true });
     } catch (e) {
         console.error("!!! Ошибка /upload:", e.message);
@@ -101,6 +97,7 @@ app.post("/upload", upload.single("file"), async (req, res) => {
     }
 });
 
+// Удаление (Без изменений)
 app.post("/delete", async (req, res) => {
     try {
         await axios.get("https://api.vk.com/method/docs.delete", {
@@ -110,21 +107,35 @@ app.post("/delete", async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// Перенос и Переименование (Теперь обновляет title и tags)
 app.post("/move", async (req, res) => {
     try {
         for (let item of req.body.items) {
+            // docs.edit теперь принимает и новое имя, и новый путь в tags
             await axios.get("https://api.vk.com/method/docs.edit", {
-                params: { owner_id: -Math.abs(GROUP_ID), doc_id: item.id, title: item.new_title, access_token: VK_TOKEN, v: "5.131" }
+                params: { 
+                    owner_id: -Math.abs(GROUP_ID), 
+                    doc_id: item.id, 
+                    title: item.new_title, 
+                    tags: item.tags, // ОБНОВЛЕНИЕ ПУТИ ЧЕРЕЗ МЕТКИ
+                    access_token: VK_TOKEN, 
+                    v: "5.131" 
+                }
             });
         }
         res.json({ success: true });
-    } catch (e) { res.status(500).json({ error: e.message }); }
+    } catch (e) { 
+        console.error("!!! Ошибка /move:", e.message);
+        res.status(500).json({ error: e.message }); 
+    }
 });
 
+// Прокси для скачивания (Без изменений названия в заголовке)
 app.get("/download-proxy", async (req, res) => {
     try {
         const response = await axios({ url: req.query.url, method: 'GET', responseType: 'stream' });
-        res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(req.query.title.split('/').pop())}"`);
+        // Используем title для имени файла при скачивании
+        res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(req.query.title)}"`);
         response.data.pipe(res);
     } catch (e) { res.status(500).send("Error"); }
 });

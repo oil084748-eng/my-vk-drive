@@ -210,7 +210,6 @@
         fetchFiles();
         window.onload = () => { lucide.createIcons(); };
 
-        // 1. Системное окно при обновлении/закрытии
         window.addEventListener('beforeunload', (e) => {
             if (isActionActive || isProcessing) {
                 e.preventDefault();
@@ -218,17 +217,10 @@
             }
         });
 
-        // 2. Внутреннее окно при навигации
         function safeNavigate(callback) {
             if (isActionActive || isProcessing) {
-                uiConfirm(
-                    'Прервать процесс?', 
-                    'Процесс ещё не завершен', 
-                    () => { isActionActive = false; isProcessing = false; callback(); }
-                );
-            } else {
-                callback();
-            }
+                uiConfirm('Прервать процесс?', 'Процесс ещё не завершен', () => { isActionActive = false; isProcessing = false; callback(); });
+            } else { callback(); }
         }
 
         const observer = new MutationObserver(() => { if (document.querySelector('[class*="vkc__"]')) { triggerCaptchaUI("ВВЕДИТЕ КАПЧУ В ВК!"); showCaptchaModal(); } });
@@ -265,6 +257,11 @@
             finally { showActionLoader(false); if (btn && btn.classList) setTimeout(() => btn.classList.remove('animate-spin'), 500); }
         }
 
+        // ЛОГИКА ТЕГОВ ДЛЯ ПУТЕЙ
+        function getFilePath(item) {
+            return (item.tags && item.tags.length > 0) ? item.tags[0] : item.title;
+        }
+
         function applyFilters() {
             const query = (document.getElementById('searchInput')?.value || "").toLowerCase();
             const sort = document.getElementById('sortSelect').value;
@@ -274,27 +271,21 @@
             document.getElementById('trashPanel').classList.toggle('hidden', !isTrashRoot);
 
             allItems.forEach(i => {
-                const t = i.title || "";
-                if (t.startsWith('.trash/')) { if (isTrashRoot) files.push(i); return; }
-                if (query) { if (t.toLowerCase().includes(query)) files.push(i); }
+                const fullPath = getFilePath(i);
+                if (fullPath.startsWith('.trash/')) { if (isTrashRoot) files.push(i); return; }
+                if (query) { if (i.title.toLowerCase().includes(query) || fullPath.toLowerCase().includes(query)) files.push(i); }
                 else {
-                    if (pathStr === "" && !t.includes('/')) files.push(i);
-                    else if (pathStr === "" && t.includes('/')) folders.add(t.split('/')[0]);
-                    else if (t.startsWith(pathStr + "/")) {
-                        const rel = t.substring(pathStr.length + 1);
+                    if (pathStr === "" && !fullPath.includes('/')) files.push(i);
+                    else if (pathStr === "" && fullPath.includes('/')) folders.add(fullPath.split('/')[0]);
+                    else if (fullPath.startsWith(pathStr + "/")) {
+                        const rel = fullPath.substring(pathStr.length + 1);
                         if (rel.includes('/')) folders.add(rel.split('/')[0]); else files.push(i);
                     }
                 }
             });
 
-            files.sort((a, b) => {
-                if (sort === 'date_desc') return (b.date || 0) - (a.date || 0);
-                if (sort === 'date_asc') return (a.date || 0) - (b.date || 0);
-                return (a.title || "").localeCompare(b.title || "");
-            });
-            
-            currentVisibleItems.folders = Array.from(folders).sort();
-            currentVisibleItems.files = files;
+            files.sort((a, b) => sort === 'date_desc' ? (b.date || 0) - (a.date || 0) : sort === 'date_asc' ? (a.date || 0) - (b.date || 0) : (a.title || "").localeCompare(b.title || ""));
+            currentVisibleItems = { folders: Array.from(folders).sort(), files };
             render(currentVisibleItems.folders, currentVisibleItems.files);
         }
 
@@ -324,7 +315,7 @@
                 const isSelected = selectedIds.has('file:'+file.id);
                 div.className = `bg-white p-5 rounded-3xl flex flex-col gap-4 shadow-sm border border-gray-100 file-card ${isSelected ? 'selected' : ''}`;
                 div.onclick = (e) => { if(selectionMode) { toggleItemSelection('file:'+file.id); e.stopPropagation(); } };
-                const fName = (file.title || "").split('/').pop().replace(/___/g, ' / ');
+                const fName = file.title;
                 div.innerHTML = `<div class="flex items-center gap-4 cursor-pointer">
                     ${selectionMode ? `<div class="p-1">${isSelected ? '<i data-lucide="check-circle-2" class="text-blue-500 w-6 h-6"></i>' : '<i data-lucide="circle" class="text-gray-300 w-6 h-6"></i>'}</div>` : ''}
                     <div class="bg-gray-50 p-3 rounded-2xl text-gray-400"><i data-lucide="file-text" class="w-7 h-7"></i></div>
@@ -347,24 +338,13 @@
             updateBottomBar();
         }
 
-        function toggleSelectionMode() { 
-            selectionMode = !selectionMode; 
-            selectedIds.clear(); 
-            document.getElementById('multiSelectBtn').classList.toggle('text-blue-500', selectionMode); 
-            applyFilters(); 
-        }
-        function toggleItemSelection(idKey) { 
-            if (selectedIds.has(idKey)) selectedIds.delete(idKey); 
-            else selectedIds.add(idKey); 
-            vkBridge.send("VKWebAppTapticNotificationOccurred", {"type": "light"}); 
-            applyFilters(); 
-        }
+        function toggleSelectionMode() { selectionMode = !selectionMode; selectedIds.clear(); document.getElementById('multiSelectBtn').classList.toggle('text-blue-500', selectionMode); applyFilters(); }
+        function toggleItemSelection(idKey) { if (selectedIds.has(idKey)) selectedIds.delete(idKey); else selectedIds.add(idKey); vkBridge.send("VKWebAppTapticNotificationOccurred", {"type": "light"}); applyFilters(); }
 
         function selectAll() {
             let allSelected = true;
             currentVisibleItems.folders.forEach(f => { if (!selectedIds.has('folder:'+f)) allSelected = false; });
             currentVisibleItems.files.forEach(file => { if (!selectedIds.has('file:'+file.id)) allSelected = false; });
-            
             if (allSelected && (currentVisibleItems.folders.length > 0 || currentVisibleItems.files.length > 0)) {
                 currentVisibleItems.folders.forEach(f => selectedIds.delete('folder:'+f));
                 currentVisibleItems.files.forEach(file => selectedIds.delete('file:'+file.id));
@@ -379,96 +359,55 @@
         function updateBottomBar() {
             const bar = document.getElementById('bottomBar');
             const inner = document.getElementById('bottomBarInner');
-
             if (clipboard !== null) {
                 bar.classList.remove('hidden');
-                inner.innerHTML = `
-                    <div class="flex items-center justify-between gap-3">
-                        <button onclick="pasteItem()" class="flex-1 bg-green-600 text-white py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider shadow-sm active:scale-[0.98]">Вставить сюда</button>
-                        <button onclick="cancelMove()" class="touch-target text-green-600 bg-white border border-green-200 rounded-xl px-3"><i data-lucide="x" class="w-5 h-5"></i></button>
-                    </div>
-                `;
-                lucide.createIcons();
-                return;
+                inner.innerHTML = `<div class="flex items-center justify-between gap-3"><button onclick="pasteItem()" class="flex-1 bg-green-600 text-white py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider shadow-sm active:scale-[0.98]">Вставить сюда</button><button onclick="cancelMove()" class="touch-target text-green-600 bg-white border border-green-200 rounded-xl px-3"><i data-lucide="x" class="w-5 h-5"></i></button></div>`;
+                lucide.createIcons(); return;
             }
-
             if (selectionMode) {
                 bar.classList.remove('hidden');
                 const count = selectedIds.size;
                 const disabled = count === 0 ? 'opacity-50 pointer-events-none' : '';
                 const inTrash = currentPath[0] === '.trash';
-
                 if (inTrash) {
-                    inner.innerHTML = `
-                        <div class="text-blue-600 font-black text-[10px] uppercase tracking-widest text-center mb-2">Выбрано: <span id="selectedCount">${count}</span></div>
-                        <div class="flex gap-2 justify-between">
-                            <button onclick="selectAll()" class="bg-gray-100 text-gray-600 py-2.5 rounded-xl font-bold text-[9px] uppercase tracking-widest flex-1 active:scale-95 transition-transform">Все</button>
-                            <button onclick="bulkRestore()" class="bg-blue-600 text-white py-2.5 rounded-xl font-bold text-[9px] uppercase tracking-widest flex-1 active:scale-95 transition-transform ${disabled}">Восстан.</button>
-                            <button onclick="uiConfirm('Стереть выбранные?', 'Удалить навсегда из ВК?', () => bulkDeletePermanently())" class="bg-red-500 text-white py-2.5 rounded-xl font-bold text-[9px] uppercase tracking-widest flex-1 active:scale-95 transition-transform ${disabled}">Стереть</button>
-                            <button onclick="toggleSelectionMode()" class="bg-gray-100 text-gray-400 w-10 py-2.5 rounded-xl flex items-center justify-center flex-none active:scale-95 transition-transform"><i data-lucide="x" class="w-4 h-4"></i></button>
-                        </div>
-                    `;
+                    inner.innerHTML = `<div class="text-blue-600 font-black text-[10px] uppercase tracking-widest text-center mb-2">Выбрано: <span id="selectedCount">${count}</span></div><div class="flex gap-2 justify-between"><button onclick="selectAll()" class="bg-gray-100 text-gray-600 py-2.5 rounded-xl font-bold text-[9px] uppercase tracking-widest flex-1 active:scale-95 transition-transform">Все</button><button onclick="bulkRestore()" class="bg-blue-600 text-white py-2.5 rounded-xl font-bold text-[9px] uppercase tracking-widest flex-1 active:scale-95 transition-transform ${disabled}">Восстан.</button><button onclick="uiConfirm('Стереть выбранные?', 'Удалить навсегда из ВК?', () => bulkDeletePermanently())" class="bg-red-500 text-white py-2.5 rounded-xl font-bold text-[9px] uppercase tracking-widest flex-1 active:scale-95 transition-transform ${disabled}">Стереть</button><button onclick="toggleSelectionMode()" class="bg-gray-100 text-gray-400 w-10 py-2.5 rounded-xl flex items-center justify-center flex-none active:scale-95 transition-transform"><i data-lucide="x" class="w-4 h-4"></i></button></div>`;
                 } else {
-                    inner.innerHTML = `
-                        <div class="text-blue-600 font-black text-[10px] uppercase tracking-widest text-center mb-2">Выбрано: <span id="selectedCount">${count}</span></div>
-                        <div class="flex gap-2 justify-between">
-                            <button onclick="selectAll()" class="bg-gray-100 text-gray-600 py-2.5 rounded-xl font-bold text-[9px] uppercase tracking-widest flex-1 active:scale-95 transition-transform">Все</button>
-                            <button onclick="startBulkMove()" class="bg-blue-600 text-white py-2.5 rounded-xl font-bold text-[9px] uppercase tracking-widest flex-1 active:scale-95 transition-transform ${disabled}">Перенос</button>
-                            <button onclick="uiConfirm('В корзину?', 'Удалить выбранные файлы?', () => bulkMoveToTrash())" class="bg-red-500 text-white py-2.5 rounded-xl font-bold text-[9px] uppercase tracking-widest flex-1 active:scale-95 transition-transform ${disabled}">В корзину</button>
-                            <button onclick="toggleSelectionMode()" class="bg-gray-100 text-gray-400 w-10 py-2.5 rounded-xl flex items-center justify-center flex-none active:scale-95 transition-transform"><i data-lucide="x" class="w-4 h-4"></i></button>
-                        </div>
-                    `;
+                    inner.innerHTML = `<div class="text-blue-600 font-black text-[10px] uppercase tracking-widest text-center mb-2">Выбрано: <span id="selectedCount">${count}</span></div><div class="flex gap-2 justify-between"><button onclick="selectAll()" class="bg-gray-100 text-gray-600 py-2.5 rounded-xl font-bold text-[9px] uppercase tracking-widest flex-1 active:scale-95 transition-transform">Все</button><button onclick="startBulkMove()" class="bg-blue-600 text-white py-2.5 rounded-xl font-bold text-[9px] uppercase tracking-widest flex-1 active:scale-95 transition-transform ${disabled}">Перенос</button><button onclick="uiConfirm('В корзину?', 'Удалить выбранные файлы?', () => bulkMoveToTrash())" class="bg-red-500 text-white py-2.5 rounded-xl font-bold text-[9px] uppercase tracking-widest flex-1 active:scale-95 transition-transform ${disabled}">В корзину</button><button onclick="toggleSelectionMode()" class="bg-gray-100 text-gray-400 w-10 py-2.5 rounded-xl flex items-center justify-center flex-none active:scale-95 transition-transform"><i data-lucide="x" class="w-4 h-4"></i></button></div>`;
                 }
                 lucide.createIcons();
-            } else {
-                bar.classList.add('hidden');
-            }
+            } else { bar.classList.add('hidden'); }
         }
 
         async function startBulkMove() {
             let itemsToMove = [];
             selectedIds.forEach(idKey => { 
                 const [type, id] = idKey.split(':'); 
-                if(type === 'file') { 
-                    const f = allItems.find(i => i.id == id); 
-                    if(f) itemsToMove.push({type: 'file', data: f}); 
-                } else { 
-                    itemsToMove.push({type: 'folder', data: id}); 
-                } 
+                if(type === 'file') { const f = allItems.find(i => i.id == id); if(f) itemsToMove.push({type: 'file', data: f}); } 
+                else { itemsToMove.push({type: 'folder', data: id}); } 
             });
             clipboard = { type: 'bulk', data: itemsToMove, oldPath: currentPath.join('/') }; 
-            toggleSelectionMode(); 
-            updateBottomBar();
+            toggleSelectionMode(); updateBottomBar();
             vkBridge.send("VKWebAppTapticNotificationOccurred", {"type": "success"});
         }
 
-        function cancelMove() { 
-            clipboard = null; 
-            updateBottomBar(); 
-        }
+        function cancelMove() { clipboard = null; updateBottomBar(); }
 
         async function pasteItem() {
-            isActionActive = true;
-            let nP = currentPath.join('/'); 
-            let toUpdate = [];
+            isActionActive = true; let nP = currentPath.join('/'); let toUpdate = [];
             if (clipboard.type === 'bulk') {
                 clipboard.data.forEach(item => {
                     if(item.type === 'file') { 
-                        toUpdate.push({ id: item.data.id, new_title: nP ? `${nP}/${item.data.title.split('/').pop()}` : item.data.title.split('/').pop() }); 
+                        const nT = nP ? `${nP}/${item.data.title}` : item.data.title;
+                        toUpdate.push({ id: item.data.id, new_title: item.data.title, tags: nT }); 
                     } else { 
                         let oldP = clipboard.oldPath ? clipboard.oldPath+'/'+item.data : item.data; 
                         let newP = nP ? nP+'/'+item.data : item.data; 
-                        allItems.filter(i => i.title === oldP || i.title.startsWith(oldP+'/')).forEach(i => { 
-                            toUpdate.push({id: i.id, new_title: newP + i.title.substring(oldP.length)}); 
+                        allItems.filter(i => getFilePath(i) === oldP || getFilePath(i).startsWith(oldP+'/')).forEach(i => { 
+                            const nT = newP + getFilePath(i).substring(oldP.length);
+                            toUpdate.push({id: i.id, new_title: i.title, tags: nT}); 
                         }); 
                     }
                 });
-            } else if (clipboard.type === 'file') { 
-                toUpdate.push({ id: clipboard.data.id, new_title: nP ? `${nP}/${clipboard.data.title.split('/').pop()}` : clipboard.data.title.split('/').pop() }); 
-            } else { 
-                let oldP = clipboard.oldPath ? clipboard.oldPath+'/'+clipboard.data : clipboard.data; 
-                let newP = nP ? nP+'/'+clipboard.data : clipboard.data; 
-                toUpdate = allItems.filter(i => i.title === oldP || i.title.startsWith(oldP+'/')).map(i => ({id: i.id, new_title: newP + i.title.substring(oldP.length)})); 
             }
             
             showActionLoader(true, `ПЕРЕНОС (0/${toUpdate.length})...`);
@@ -477,19 +416,21 @@
                 await fetch(`${API_URL}/move${VK_PARAMS}`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ items: [toUpdate[i]] }) });
                 await new Promise(r => setTimeout(r, 350));
             }
-            cancelMove(); 
-            showActionLoader(false); 
-            isActionActive = false;
-            fetchFiles();
+            cancelMove(); showActionLoader(false); isActionActive = false; fetchFiles();
         }
 
         function goToTrash() { currentPath = ['.trash']; applyFilters(); }
-        async function restoreItem(file) { showActionLoader(true, "ВОССТАНОВЛЕНИЕ..."); const originalTitle = file.title.replace('.trash/', '').replace(/___/g, '/'); await fetch(`${API_URL}/move${VK_PARAMS}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ items: [{id: file.id, new_title: originalTitle}] }) }); showActionLoader(false); fetchFiles(); }
+        async function restoreItem(file) { 
+            showActionLoader(true, "ВОССТАНОВЛЕНИЕ..."); 
+            const originalPath = getFilePath(file).replace('.trash/', '').replace(/___/g, '/'); 
+            await fetch(`${API_URL}/move${VK_PARAMS}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ items: [{id: file.id, new_title: file.title, tags: originalPath}] }) }); 
+            showActionLoader(false); fetchFiles(); 
+        }
         async function deleteFilePermanently(id) { showActionLoader(true, "СТИРАЮ..."); await fetch(`${API_URL}/delete${VK_PARAMS}`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({doc_id:id})}); showActionLoader(false); fetchFiles(); }
+        
         async function emptyTrash() {
-            const list = allItems.filter(i => i.title.startsWith('.trash/'));
-            isActionActive = true;
-            showActionLoader(true, `ОЧИСТКА (0/${list.length})...`);
+            const list = allItems.filter(i => getFilePath(i).startsWith('.trash/'));
+            isActionActive = true; showActionLoader(true, `ОЧИСТКА (0/${list.length})...`);
             for (let i = 0; i < list.length; i++) {
                 showActionLoader(true, `ОЧИСТКА (${i+1}/${list.length})...`);
                 await fetch(`${API_URL}/delete${VK_PARAMS}`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({doc_id: list[i].id}) });
@@ -497,6 +438,7 @@
             }
             showActionLoader(false); isActionActive = false; fetchFiles();
         }
+
         function updateBreadcrumb() { const bc = document.getElementById('breadcrumb'); bc.innerHTML = `<span onclick="safeNavigate(() => goToRoot())" class="breadcrumb-item cursor-pointer">ДИСК</span>`; currentPath.forEach((p, idx) => { const s = document.createElement('span'); s.className = 'breadcrumb-item cursor-pointer'; s.innerText = p === '.trash' ? 'КОРЗИНА' : p.toUpperCase(); s.onclick = () => { currentPath = currentPath.slice(0, idx + 1); applyFilters(); }; bc.appendChild(s); }); }
         function goToRoot() { currentPath = []; selectionMode = false; applyFilters(); }
         function debounceSearch() { clearTimeout(searchTimeout); searchTimeout = setTimeout(applyFilters, 150); }
@@ -506,13 +448,25 @@
         function closeConfirm() { document.getElementById('customConfirm').classList.add('hidden'); }
         function uiAlert(title, desc) { document.getElementById('alertTitle').innerText = title; document.getElementById('alertDesc').innerText = desc; document.getElementById('customAlert').classList.remove('hidden'); }
         function showActionLoader(show, text = "Синхронизация...") { const al = document.getElementById('actionLoader'); if (al) { document.getElementById('actionLoaderText').innerText = text; al.classList.toggle('hidden', !show); } }
-        function formatDate(ts) { if (!ts) return '...'; let d = new Date(ts < 10000000000 ? ts * 1000 : ts); return d.toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+        function formatDate(ts) { if (!ts) return '...'; let d = new Date(ts < 10000000000 ? ts * 1000 : ts); return d.toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' }); }
 
         async function renameItem(type, item, newName) {
-            let oldF = type === 'file' ? item.title : (currentPath.length ? currentPath.join('/')+'/'+item : item);
-            let newF = oldF.split('/').slice(0,-1).concat(newName).join('/');
-            const list = allItems.filter(i => i.title === oldF || (type === 'folder' && i.title.startsWith(oldF+'/'))).map(i => ({id: i.id, new_title: type === 'file' ? newF : newF + i.title.substring(oldF.length)}));
             isActionActive = true;
+            let list = [];
+            if (type === 'file') {
+                const oldP = getFilePath(item);
+                const pathParts = oldP.split('/');
+                pathParts[pathParts.length - 1] = newName;
+                list.push({id: item.id, new_title: newName, tags: pathParts.join('/')});
+            } else {
+                const oldP = currentPath.length ? currentPath.join('/')+'/'+item : item;
+                const newP = currentPath.length ? currentPath.join('/')+'/'+newName : newName;
+                allItems.filter(i => getFilePath(i) === oldP || getFilePath(i).startsWith(oldP+'/')).forEach(i => {
+                    const nT = newP + getFilePath(i).substring(oldP.length);
+                    list.push({id: i.id, new_title: i.title, tags: nT});
+                });
+            }
+
             showActionLoader(true, `СИНХРОНИЗАЦИЯ (0/${list.length})...`);
             for (let i = 0; i < list.length; i++) {
                 showActionLoader(true, `СИНХРОНИЗАЦИЯ (${i+1}/${list.length})...`);
@@ -521,12 +475,20 @@
             }
             showActionLoader(false); isActionActive = false; fetchFiles();
         }
+
         async function bulkMoveToTrash() {
             let list = [];
             for (const idKey of selectedIds) {
                 const [type, id] = idKey.split(':');
-                if(type === 'file') { const f = allItems.find(i => i.id == id); if(f) list.push({id: f.id, new_title: '.trash/' + f.title.replace(/\//g, '___')}); }
-                else { const pref = currentPath.length ? currentPath.join('/')+'/'+id : id; allItems.filter(i => i.title === pref || i.title.startsWith(pref+'/')).forEach(i => { list.push({id: i.id, new_title: '.trash/' + i.title.replace(/\//g, '___')}); }); }
+                if(type === 'file') { 
+                    const f = allItems.find(i => i.id == id); 
+                    if(f) list.push({id: f.id, new_title: f.title, tags: '.trash/' + getFilePath(f).replace(/\//g, '___')}); 
+                } else { 
+                    const pref = currentPath.length ? currentPath.join('/')+'/'+id : id; 
+                    allItems.filter(i => getFilePath(i) === pref || getFilePath(i).startsWith(pref+'/')).forEach(i => { 
+                        list.push({id: i.id, new_title: i.title, tags: '.trash/' + getFilePath(i).replace(/\//g, '___')}); 
+                    }); 
+                }
             }
             isActionActive = true;
             showActionLoader(true, `УДАЛЕНИЕ (0/${list.length})...`);
@@ -537,11 +499,18 @@
             }
             toggleSelectionMode(); showActionLoader(false); isActionActive = false; fetchFiles();
         }
+
         async function bulkRestore() {
             let list = [];
             for (const idKey of selectedIds) {
                 const [type, id] = idKey.split(':');
-                if(type === 'file') { const f = allItems.find(i => i.id == id); if(f) { const ot = f.title.replace('.trash/', '').replace(/___/g, '/'); list.push({id: f.id, new_title: ot}); } }
+                if(type === 'file') { 
+                    const f = allItems.find(i => i.id == id); 
+                    if(f) { 
+                        const ot = getFilePath(f).replace('.trash/', '').replace(/___/g, '/'); 
+                        list.push({id: f.id, new_title: f.title, tags: ot}); 
+                    } 
+                }
             }
             isActionActive = true;
             showActionLoader(true, `ВОССТАНОВЛЕНИЕ (0/${list.length})...`);
@@ -552,6 +521,7 @@
             }
             toggleSelectionMode(); showActionLoader(false); isActionActive = false; fetchFiles();
         }
+
         async function bulkDeletePermanently() {
             let list = [];
             for (const idKey of selectedIds) {
@@ -567,19 +537,18 @@
             }
             toggleSelectionMode(); showActionLoader(false); isActionActive = false; fetchFiles();
         }
+
         function downloadFile(u, t) {
             const downloadUrl = `${API_URL}/download-proxy?url=${encodeURIComponent(u)}&title=${encodeURIComponent(t)}${VK_PARAMS.replace('?', '&')}`;
             const link = document.createElement('a');
-            link.href = downloadUrl;
-            link.target = '_blank';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            link.href = downloadUrl; link.target = '_blank'; document.body.appendChild(link);
+            link.click(); document.body.removeChild(link);
         }
         function createFolder(n) { currentPath.push(n); applyFilters(); }
         
         function handleFiles(files) { const targetPath = currentPath.join('/'); for (const f of files) queue.push({ file: f, status: "Ожидание", targetPath: targetPath }); document.getElementById('progressContainer').classList.remove('hidden'); processQueue(); }
         async function processQueue() { if (isProcessing) return; isProcessing = true; while (queue.some(i => i.status === "Ожидание")) { const item = queue.find(i => i.status === "Ожидание"); await uploadItem(item); await new Promise(r => setTimeout(r, 1200)); } isProcessing = false; document.getElementById('progressContainer').classList.add('hidden'); fetchFiles(); }
+        
         function uploadItem(item) {
             return new Promise(resolve => {
                 item.status = "Загрузка"; const fd = new FormData(); fd.append("file", item.file); fd.append("folder_path", item.targetPath); const x = new XMLHttpRequest();
