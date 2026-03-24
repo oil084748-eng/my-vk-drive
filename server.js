@@ -8,55 +8,51 @@ const path = require("path");
 
 const app = express();
 
-// Настройки CORS - разрешаем всё для тестов
+// Настройки CORS
 app.use(cors());
 app.use(express.json());
 
-// ПРОВЕРКА: Создаем папку для загрузок, если её нет
 const uploadDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir);
 }
 
-// === НАСТРОЙКИ (Сохранены из твоего оригинала) ===
+// === НАСТРОЙКИ ===
 const VK_TOKEN = "vk1.a.9IWAg6xUmeHq-2qOjlrAG2nNpYS4s0GYkUrKu8lMwXmrhUSgQnpgdj0cmZrRS13ZwtenBW3dPGW2xZtlpkWchwprwx9rTK1LM0jRpkWd6Xs6eGQgOPJPDfyydEFCiI1vSUXW8JMsk-tDk6h3ujaB8uAdRoXae0seS9CUM6EI53b3ILCTytawu-bJC92CuGWN7hcA3z4rmPUU7nmk02yQcg";
 const GROUP_ID = "236017708"; 
 
 const upload = multer({ dest: "uploads/" });
 
-// Логгер запросов
 app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
     next();
 });
 
-// Получение списка файлов (Добавлена обработка tags)
+// Получение списка файлов
 app.get("/files", async (req, res) => {
     try {
-        console.log("--> Запрос списка файлов из ВК...");
         const response = await axios.get("https://api.vk.com/method/docs.get", {
             params: { 
                 owner_id: -Math.abs(GROUP_ID), 
                 access_token: VK_TOKEN, 
                 v: "5.131", 
                 count: 2000 
-            }
+            },
+            timeout: 15000
         });
 
         if (response.data.error) {
-            console.error("!!! Ошибка ВК API:", response.data.error.error_msg);
             return res.status(400).json({ error: response.data.error.error_msg });
         }
 
-        // Передаем данные как есть, фронтенд сам разберется с полем tags
+        // Возвращаем элементы как есть (включая поле tags)
         res.json(response.data.response ? response.data.response.items : []);
     } catch (e) { 
-        console.error("!!! Критическая ошибка /files:", e.message);
         res.status(500).json({ error: e.message }); 
     }
 });
 
-// Загрузка файла (Теперь путь пишется в tags)
+// Загрузка файла: название чистое, путь пишется в tags
 app.post("/upload", upload.single("file"), async (req, res) => {
     try {
         if (!req.file) return res.status(400).json({ error: "Файл не получен" });
@@ -64,28 +60,35 @@ app.post("/upload", upload.single("file"), async (req, res) => {
         const { folder_path = "" } = req.body;
         const originalName = Buffer.from(req.file.originalname, 'latin1').toString('utf8');
         
-        // Название теперь ВСЕГДА чистое, без папок
-        const finalTitle = originalName;
-
-        console.log(`--> Загрузка файла: ${finalTitle} в папку (метку): ${folder_path}`);
+        console.log(`--> Загрузка: ${originalName} в метку: ${folder_path}`);
 
         const serverRes = await axios.get(`https://api.vk.com/method/docs.getUploadServer`, {
-            params: { group_id: GROUP_ID, access_token: VK_TOKEN, v: "5.131" }
+            params: { group_id: GROUP_ID, access_token: VK_TOKEN, v: "5.131" },
+            timeout: 10000
         });
+
+        if (serverRes.data.error) throw new Error(serverRes.data.error.error_msg);
 
         const form = new FormData();
         form.append("file", fs.createReadStream(req.file.path), { filename: originalName });
-        const uploadRes = await axios.post(serverRes.data.response.upload_url, form, { headers: form.getHeaders() });
+        
+        const uploadRes = await axios.post(serverRes.data.response.upload_url, form, { 
+            headers: form.getHeaders(),
+            timeout: 60000,
+            maxContentLength: Infinity,
+            maxBodyLength: Infinity
+        });
 
-        // Сохранение: путь уходит в tags
+        // Сохранение: путь передается в параметр tags
         await axios.post("https://api.vk.com/method/docs.save", null, {
             params: { 
                 file: uploadRes.data.file, 
-                title: finalTitle, 
-                tags: folder_path, // ПУТЬ ТЕПЕРЬ ТУТ
+                title: originalName, 
+                tags: folder_path, 
                 access_token: VK_TOKEN, 
                 v: "5.131" 
-            }
+            },
+            timeout: 10000
         });
 
         if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
@@ -97,7 +100,7 @@ app.post("/upload", upload.single("file"), async (req, res) => {
     }
 });
 
-// Удаление (Без изменений)
+// Удаление
 app.post("/delete", async (req, res) => {
     try {
         await axios.get("https://api.vk.com/method/docs.delete", {
@@ -107,17 +110,16 @@ app.post("/delete", async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// Перенос и Переименование (Теперь обновляет title и tags)
+// Перенос и переименование: обновляет title и tags
 app.post("/move", async (req, res) => {
     try {
         for (let item of req.body.items) {
-            // docs.edit теперь принимает и новое имя, и новый путь в tags
             await axios.get("https://api.vk.com/method/docs.edit", {
                 params: { 
                     owner_id: -Math.abs(GROUP_ID), 
                     doc_id: item.id, 
                     title: item.new_title, 
-                    tags: item.tags, // ОБНОВЛЕНИЕ ПУТИ ЧЕРЕЗ МЕТКИ
+                    tags: item.tags, // Обновление пути через метки
                     access_token: VK_TOKEN, 
                     v: "5.131" 
                 }
@@ -125,16 +127,19 @@ app.post("/move", async (req, res) => {
         }
         res.json({ success: true });
     } catch (e) { 
-        console.error("!!! Ошибка /move:", e.message);
         res.status(500).json({ error: e.message }); 
     }
 });
 
-// Прокси для скачивания (Без изменений названия в заголовке)
+// Прокси для скачивания
 app.get("/download-proxy", async (req, res) => {
     try {
-        const response = await axios({ url: req.query.url, method: 'GET', responseType: 'stream' });
-        // Используем title для имени файла при скачивании
+        const response = await axios({ 
+            url: req.query.url, 
+            method: 'GET', 
+            responseType: 'stream',
+            timeout: 30000 
+        });
         res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(req.query.title)}"`);
         response.data.pipe(res);
     } catch (e) { res.status(500).send("Error"); }
