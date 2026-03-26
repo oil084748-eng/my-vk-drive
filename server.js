@@ -8,6 +8,7 @@ const path = require("path");
 
 const app = express();
 
+// Настройки CORS
 app.use(cors());
 app.use(express.json());
 
@@ -16,13 +17,21 @@ if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir);
 }
 
+// Токен и ID группы
 const VK_TOKEN = "vk1.a.9IWAg6xUmeHq-2qOjlrAG2nNpYS4s0GYkUrKu8lMwXmrhUSgQnpgdj0cmZrRS13ZwtenBW3dPGW2xZtlpkWchwprwx9rTK1LM0jRpkWd6Xs6eGQgOPJPDfyydEFCiI1vSUXW8JMsk-tDk6h3ujaB8uAdRoXae0seS9CUM6EI53b3ILCTytawu-bJC92CuGWN7hcA3z4rmPUU7nmk02yQcg";
 const GROUP_ID = "236017708"; 
 
 const upload = multer({ dest: "uploads/" });
 
+// Логирование запросов (полезно для отладки в панели Render)
+app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    next();
+});
+
 // === ИНТЕЛЛЕКТУАЛЬНАЯ ОБЕРТКА API (ПЕРЕХВАТ КАПЧИ) ===
 async function vkApi(method, params, body = {}) {
+    // Если фронтенд прислал разгаданную капчу - подмешиваем её в запрос
     if (body.captcha_sid && body.captcha_key) {
         params.captcha_sid = body.captcha_sid;
         params.captcha_key = body.captcha_key;
@@ -31,6 +40,7 @@ async function vkApi(method, params, body = {}) {
     const res = await axios.get(`https://api.vk.com/method/${method}`, { params });
     
     if (res.data.error) {
+        // Если ВК просит капчу (Код ошибки 14)
         if (res.data.error.error_code === 14) {
             throw { 
                 type: "captcha", 
@@ -43,7 +53,7 @@ async function vkApi(method, params, body = {}) {
     return res.data.response;
 }
 
-// === 1. ПОЛУЧЕНИЕ ФАЙЛОВ (С УМНОЙ ПАГИНАЦИЕЙ) ===
+// === 1. ПОЛУЧЕНИЕ ФАЙЛОВ (С УМНОЙ ПАГИНАЦИЕЙ И ПАПКАМИ) ===
 app.get("/files", async (req, res) => {
     try {
         let allItems = [];
@@ -57,10 +67,12 @@ app.get("/files", async (req, res) => {
                 owner_id: -Math.abs(GROUP_ID), 
                 count: count,
                 offset: offset,
+                return_tags: 1, // 🔥 ОБЯЗАТЕЛЬНО: Включает папки!
                 access_token: VK_TOKEN, 
                 v: "5.131" 
             };
             
+            // Перехват параметров капчи, если они пришли при обновлении списка
             if (req.query.captcha_sid) {
                 params.captcha_sid = req.query.captcha_sid;
                 params.captcha_key = req.query.captcha_key;
@@ -81,7 +93,7 @@ app.get("/files", async (req, res) => {
             }
         }
         
-        res.json(allItems); // Отдаем фронтенду полный список
+        res.json(allItems); // Отдаем фронтенду полный список с папками!
     } catch (e) {
         if (e.type === "captcha") return res.status(403).json(e);
         res.status(500).json({ error: e.message });
@@ -91,15 +103,18 @@ app.get("/files", async (req, res) => {
 // === 2. ЗАГРУЗКА ФАЙЛА ===
 app.post("/upload", upload.single("file"), async (req, res) => {
     try {
+        // Шаг 1: Получаем сервер для загрузки
         const uploadServer = await vkApi("docs.getUploadServer", { group_id: Math.abs(GROUP_ID), access_token: VK_TOKEN, v: "5.131" }, req.body);
         
+        // Шаг 2: Отправляем физический файл на сервер ВК
         const fileStream = fs.createReadStream(req.file.path);
         const form = new FormData();
         form.append("file", fileStream, { filename: req.file.originalname });
         
         const uploadRes = await axios.post(uploadServer.upload_url, form, { headers: form.getHeaders() });
-        fs.unlinkSync(req.file.path); 
+        fs.unlinkSync(req.file.path); // Удаляем временный файл с Render
         
+        // Шаг 3: Сохраняем в Диск группы
         const saveRes = await vkApi("docs.save", { file: uploadRes.data.file, title: req.file.originalname, tags: req.body.folder_path || "", access_token: VK_TOKEN, v: "5.131" }, req.body);
         
         res.json({ success: true, file: saveRes.doc });
