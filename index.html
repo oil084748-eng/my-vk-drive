@@ -145,12 +145,15 @@
         </div>
         <div class="px-5 py-2 flex items-center justify-between gap-4 bg-white border-b border-gray-50 text-[10px] font-black text-gray-400 uppercase tracking-tighter">
             <div id="breadcrumb" class="flex items-center overflow-x-auto whitespace-nowrap scrollbar-hide"></div>
-            <select id="sortSelect" onchange="applyFilters()" class="font-bold bg-gray-50 px-2 py-1 rounded-lg border-none outline-none text-blue-600">
-                <option value="date_desc">Новые</option>
-                <option value="date_asc">Старые</option>
-                <option value="name_asc">Имя</option>
-                <option value="type_asc">Тип файла</option>
-            </select>
+            <div class="flex items-center gap-3">
+                <span id="storageUsed" class="bg-gray-100 px-2.5 py-1 rounded-lg text-gray-500 font-bold whitespace-nowrap">0 МБ</span>
+                <select id="sortSelect" onchange="applyFilters()" class="font-bold bg-gray-50 px-2 py-1 rounded-lg border-none outline-none text-blue-600">
+                    <option value="date_desc">Новые</option>
+                    <option value="date_asc">Старые</option>
+                    <option value="name_asc">Имя</option>
+                    <option value="type_asc">Тип файла</option>
+                </select>
+            </div>
         </div>
     </div>
 
@@ -160,7 +163,7 @@
 
     <div id="progressContainer" class="hidden fixed bottom-24 left-5 right-5 bg-white shadow-2xl rounded-2xl p-5 border border-blue-50 z-[100]">
         <div class="flex justify-between items-center mb-3">
-            <span id="progressFileName" class="text-[10px] font-black truncate w-40 text-gray-400 uppercase tracking-widest">Файл...</span>
+            <span id="progressFileName" class="text-[10px] font-black truncate w-48 text-gray-400 uppercase tracking-widest">Файл...</span>
             <span id="progressPercent" class="text-xs font-black text-blue-600">0%</span>
         </div>
         <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden"><div id="progressBar" class="bg-blue-600 h-full w-0 transition-all duration-300"></div></div>
@@ -177,7 +180,7 @@
     </main>
 
     <footer class="p-10 text-center">
-        <div class="inline-block bg-blue-50 text-blue-600 px-4 py-2 rounded-full text-[10px] font-bold tracking-widest border border-blue-100 uppercase">ВЕРСИЯ: 2.6.8 (ANTI-CAPTCHA CORE)</div>
+        <div class="inline-block bg-blue-50 text-blue-600 px-4 py-2 rounded-full text-[10px] font-bold tracking-widest border border-blue-100 uppercase">ВЕРСИЯ: 2.6.9 (STORAGE & PROGRESS PRO)</div>
     </footer>
 
     <script>
@@ -191,12 +194,15 @@
         let selectionMode = false; let selectedIds = new Set();
         let currentVisibleItems = { folders: [], files: [] };
         let isActionActive = false;
+        
+        let uploadBatchTotal = 0;
+        let uploadBatchCurrent = 0;
 
         vkBridge.send("VKWebAppInit");
         window.onload = () => { lucide.createIcons(); checkGroupAccess(); };
         window.addEventListener('beforeunload', (e) => { if (isActionActive || isProcessing) { e.preventDefault(); e.returnValue = 'Процесс ещё не завершен'; } });
 
-        // --- УМНЫЙ API КЛИЕНТ (ПЕРЕХВАТ КАПЧИ) ---
+        // --- УМНЫЙ API КЛИЕНТ ---
         async function apiFetch(endpoint, method = 'GET', body = null) {
             let captchaData = {};
             while (true) {
@@ -206,10 +212,7 @@
                 if (method === 'POST') {
                     options.headers = { 'Content-Type': 'application/json' };
                     let payload = body ? { ...body } : {};
-                    if (captchaData.captcha_sid) {
-                        payload.captcha_sid = captchaData.captcha_sid;
-                        payload.captcha_key = captchaData.captcha_key;
-                    }
+                    if (captchaData.captcha_sid) { payload.captcha_sid = captchaData.captcha_sid; payload.captcha_key = captchaData.captcha_key; }
                     options.body = JSON.stringify(payload);
                 } else {
                     if (captchaData.captcha_sid) url += `&captcha_sid=${captchaData.captcha_sid}&captcha_key=${encodeURIComponent(captchaData.captcha_key)}`;
@@ -223,8 +226,7 @@
                     if (data.type === "captcha") {
                         triggerCaptchaUI("ВВЕДИТЕ КОД!");
                         captchaData = await showCaptchaModal(data.sid, data.img);
-                        resetCaptchaUI();
-                        continue; // Повторяем цикл с ключом капчи!
+                        resetCaptchaUI(); continue; 
                     }
                 }
                 throw new Error("API Error");
@@ -248,41 +250,19 @@
         }
         function joinTargetGroup() { vkBridge.send("VKWebAppJoinGroup", { "group_id": TARGET_GROUP_ID }).then(() => setTimeout(checkGroupAccess, 500)).catch(()=>{}); }
 
-        // --- ИНТЕРФЕЙС КАПЧИ ---
+        // --- КАПЧА ---
         function showCaptchaModal(sid, imgUrl) { 
             return new Promise((resolve, reject) => { 
-                document.getElementById('captchaImg').src = imgUrl;
-                const input = document.getElementById('captchaInput');
-                input.value = '';
+                document.getElementById('captchaImg').src = imgUrl; const input = document.getElementById('captchaInput'); input.value = '';
                 input.onkeydown = (e) => { if(e.key === 'Enter') submitCaptcha(); };
-                document.getElementById('captchaModal').classList.remove('hidden'); 
-                activeCaptcha = { sid, resolve, reject };
+                document.getElementById('captchaModal').classList.remove('hidden'); activeCaptcha = { sid, resolve, reject };
                 setTimeout(() => input.focus(), 100);
             }); 
         }
-        function closeCaptcha(success) { 
-            document.getElementById('captchaModal').classList.add('hidden'); 
-            if (!success && activeCaptcha) activeCaptcha.reject(new Error("Отмена капчи"));
-            activeCaptcha = null; 
-        }
-        function submitCaptcha() {
-            const val = document.getElementById('captchaInput').value.trim();
-            if (!val || !activeCaptcha) return;
-            const res = { captcha_sid: activeCaptcha.sid, captcha_key: val };
-            const resolve = activeCaptcha.resolve;
-            closeCaptcha(true);
-            resolve(res);
-        }
-
-        function triggerCaptchaUI(text) {
-            const l = document.getElementById('actionLoader');
-            if(l) { document.getElementById('actionLoaderText').innerText = text; l.classList.remove('hidden', 'bg-blue-600', 'text-white'); l.classList.add('bg-captcha-alert'); document.getElementById('actionSpinner').classList.add('hidden'); }
-            vkBridge.send("VKWebAppTapticNotificationOccurred", {"type": "error"});
-        }
-        function resetCaptchaUI() {
-            const l = document.getElementById('actionLoader');
-            if(l) { l.classList.add('hidden'); l.classList.remove('bg-captcha-alert'); l.classList.add('bg-blue-600', 'text-white'); document.getElementById('actionSpinner').classList.remove('hidden'); }
-        }
+        function closeCaptcha(success) { document.getElementById('captchaModal').classList.add('hidden'); if (!success && activeCaptcha) activeCaptcha.reject(new Error("Отмена капчи")); activeCaptcha = null; }
+        function submitCaptcha() { const val = document.getElementById('captchaInput').value.trim(); if (!val || !activeCaptcha) return; const res = { captcha_sid: activeCaptcha.sid, captcha_key: val }; const resolve = activeCaptcha.resolve; closeCaptcha(true); resolve(res); }
+        function triggerCaptchaUI(text) { const l = document.getElementById('actionLoader'); if(l) { document.getElementById('actionLoaderText').innerText = text; l.classList.remove('hidden', 'bg-blue-600', 'text-white'); l.classList.add('bg-captcha-alert'); document.getElementById('actionSpinner').classList.add('hidden'); } vkBridge.send("VKWebAppTapticNotificationOccurred", {"type": "error"}); }
+        function resetCaptchaUI() { const l = document.getElementById('actionLoader'); if(l) { l.classList.add('hidden'); l.classList.remove('bg-captcha-alert'); l.classList.add('bg-blue-600', 'text-white'); document.getElementById('actionSpinner').classList.remove('hidden'); } }
 
         // --- УТИЛИТЫ ---
         function safeNavigate(callback) { if (isActionActive || isProcessing) uiConfirm('Прервать процесс?', 'Процесс ещё не завершен', () => { isActionActive = false; isProcessing = false; callback(); }); else callback(); }
@@ -293,10 +273,24 @@
         function uiCopyLink(url) { document.getElementById('umTitle').innerText = 'Ссылка на файл'; document.getElementById('umDescContainer').classList.add('hidden'); const inp = document.getElementById('umInput'); inp.value = url; inp.readOnly = true; inp.classList.remove('hidden'); document.getElementById('umCancelBtn').classList.remove('hidden'); document.getElementById('umCancelBtn').innerText = 'Закрыть'; document.getElementById('umCancelBtn').onclick = closeUM; const btn = document.getElementById('umConfirmBtn'); btn.innerText = 'Копировать'; btn.className = 'flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold uppercase text-xs tracking-widest'; btn.onclick = () => { inp.select(); inp.setSelectionRange(0, 99999); const showSuccess = () => { btn.innerText = 'Скопировано'; btn.classList.replace('bg-blue-600', 'bg-green-600'); setTimeout(closeUM, 1000); }; try { navigator.clipboard.writeText(url).then(showSuccess).catch(() => { document.execCommand('copy'); showSuccess(); }); } catch(e) { document.execCommand('copy'); showSuccess(); } }; document.getElementById('universalModal').classList.remove('hidden'); setTimeout(() => { inp.focus(); inp.select(); }, 100); }
         function showActionLoader(show, text = "Синхронизация...") { const al = document.getElementById('actionLoader'); if (al) { document.getElementById('actionLoaderText').innerText = text; al.classList.toggle('hidden', !show); } }
 
-        // --- ДЕЙСТВИЯ API ---
+        // --- ДЕЙСТВИЯ API И ОТОБРАЖЕНИЕ ---
         async function fetchFiles(btn) {
             showActionLoader(true, "СОЕДИНЕНИЕ..."); if (btn && btn.classList) btn.classList.add('animate-spin');
-            try { allItems = await apiFetch('/files'); applyFilters(); } catch (e) { document.getElementById('fileContainer').innerHTML = '<div class="py-20 text-center text-orange-400 font-bold uppercase text-[10px] italic">Ошибка сети...</div>'; } finally { showActionLoader(false); if (btn && btn.classList) setTimeout(() => btn.classList.remove('animate-spin'), 500); }
+            try { 
+                allItems = await apiFetch('/files'); 
+                updateStorageDisplay();
+                applyFilters(); 
+            } catch (e) { document.getElementById('fileContainer').innerHTML = '<div class="py-20 text-center text-orange-400 font-bold uppercase text-[10px] italic">Ошибка сети...</div>'; } 
+            finally { showActionLoader(false); if (btn && btn.classList) setTimeout(() => btn.classList.remove('animate-spin'), 500); }
+        }
+        
+        function updateStorageDisplay() {
+            const totalBytes = allItems.reduce((sum, item) => sum + (item.size || 0), 0);
+            let sizeStr = (totalBytes / (1024 * 1024 * 1024)).toFixed(2) + ' ГБ';
+            if (totalBytes < 1024 * 1024 * 1024) sizeStr = (totalBytes / (1024 * 1024)).toFixed(1) + ' МБ';
+            if (totalBytes === 0) sizeStr = '0 МБ';
+            const el = document.getElementById('storageUsed');
+            if(el) el.innerText = 'Занято: ' + sizeStr;
         }
 
         async function restoreItemById(id) { 
@@ -305,9 +299,7 @@
             showActionLoader(true, "ВОССТАНОВЛЕНИЕ..."); try { await apiFetch('/move', 'POST', { items: [{id: file.id, new_title: file.title, tags: tags}] }); } catch(e){} showActionLoader(false); fetchFiles(); 
         }
 
-        async function deleteFileById(id) { 
-            showActionLoader(true, "СТИРАЮ..."); try { await apiFetch('/delete', 'POST', {doc_id:id}); } catch(e){} showActionLoader(false); fetchFiles(); 
-        }
+        async function deleteFileById(id) { showActionLoader(true, "СТИРАЮ..."); try { await apiFetch('/delete', 'POST', {doc_id:id}); } catch(e){} showActionLoader(false); fetchFiles(); }
 
         async function renameItem(type, item, newName) {
             isActionActive = true; let list = [];
@@ -318,10 +310,7 @@
                 allItems.filter(i => { const p = getItemPath(i); return p === oldP || p.startsWith(oldP+'/'); }).forEach(i => { let tags = newP + getItemPath(i).substring(oldP.length); const linkTag = extractHiddenLink(i); if (linkTag) tags = tags ? tags + ',' + LINK_PREFIX + linkTag : LINK_PREFIX + linkTag; list.push({id: i.id, new_title: i.title, tags: tags}); });
             }
             showActionLoader(true, `СИНХРОНИЗАЦИЯ (0/${list.length})...`);
-            for (let i = 0; i < list.length; i++) {
-                showActionLoader(true, `СИНХРОНИЗАЦИЯ (${i+1}/${list.length})...`);
-                try { await apiFetch('/move', 'POST', { items: [list[i]] }); } catch(e){ break; } await new Promise(r => setTimeout(r, 350));
-            }
+            for (let i = 0; i < list.length; i++) { showActionLoader(true, `СИНХРОНИЗАЦИЯ (${i+1}/${list.length})...`); try { await apiFetch('/move', 'POST', { items: [list[i]] }); } catch(e){ break; } await new Promise(r => setTimeout(r, 350)); }
             showActionLoader(false); isActionActive = false; fetchFiles();
         }
 
@@ -333,10 +322,7 @@
                 else { const pref = currentPath.length ? currentPath.join('/')+'/'+id : id; allItems.filter(i => { const p = getItemPath(i); return !isItemInTrash(i) && (p === pref || p.startsWith(pref+'/')); }).forEach(i => { let tags = ".trash,original_path:" + getItemPath(i); const linkTag = extractHiddenLink(i); if (linkTag) tags += ',' + LINK_PREFIX + linkTag; list.push({id: i.id, new_title: i.title, tags: tags}); }); }
             }
             isActionActive = true; showActionLoader(true, `УДАЛЕНИЕ (0/${list.length})...`);
-            for (let i = 0; i < list.length; i++) {
-                showActionLoader(true, `УДАЛЕНИЕ (${i+1}/${list.length})...`);
-                try { await apiFetch('/move', 'POST', { items: [list[i]] }); } catch(e){ break; } await new Promise(r => setTimeout(r, 350));
-            }
+            for (let i = 0; i < list.length; i++) { showActionLoader(true, `УДАЛЕНИЕ (${i+1}/${list.length})...`); try { await apiFetch('/move', 'POST', { items: [list[i]] }); } catch(e){ break; } await new Promise(r => setTimeout(r, 350)); }
             toggleSelectionMode(); showActionLoader(false); isActionActive = false; fetchFiles();
         }
 
@@ -347,34 +333,20 @@
                 if(type === 'file') { const f = allItems.find(i => i.id == id); if(f) { let tags = getItemPath(f); const linkTag = extractHiddenLink(f); if (linkTag) tags = tags ? tags + ',' + LINK_PREFIX + linkTag : LINK_PREFIX + linkTag; list.push({id: f.id, new_title: f.title, tags: tags}); } }
             }
             isActionActive = true; showActionLoader(true, `ВОССТАНОВЛЕНИЕ (0/${list.length})...`);
-            for (let i = 0; i < list.length; i++) {
-                showActionLoader(true, `ВОССТАНОВЛЕНИЕ (${i+1}/${list.length})...`);
-                try { await apiFetch('/move', 'POST', { items: [list[i]] }); } catch(e){ break; } await new Promise(r => setTimeout(r, 350));
-            }
+            for (let i = 0; i < list.length; i++) { showActionLoader(true, `ВОССТАНОВЛЕНИЕ (${i+1}/${list.length})...`); try { await apiFetch('/move', 'POST', { items: [list[i]] }); } catch(e){ break; } await new Promise(r => setTimeout(r, 350)); }
             toggleSelectionMode(); showActionLoader(false); isActionActive = false; fetchFiles();
         }
 
         async function bulkDeletePermanently() {
-            let list = [];
-            for (const idKey of selectedIds) {
-                const [type, id] = idKey.split(':');
-                if(type === 'file') { const f = allItems.find(i => i.id == id); if(f) list.push(f); }
-            }
+            let list = []; for (const idKey of selectedIds) { const [type, id] = idKey.split(':'); if(type === 'file') { const f = allItems.find(i => i.id == id); if(f) list.push(f); } }
             isActionActive = true; showActionLoader(true, `СТИРАЮ (0/${list.length})...`);
-            for (let i = 0; i < list.length; i++) {
-                showActionLoader(true, `СТИРАЮ (${i+1}/${list.length})...`);
-                try { await apiFetch('/delete', 'POST', { doc_id: list[i].id }); } catch(e){ break; } await new Promise(r => setTimeout(r, 350));
-            }
+            for (let i = 0; i < list.length; i++) { showActionLoader(true, `СТИРАЮ (${i+1}/${list.length})...`); try { await apiFetch('/delete', 'POST', { doc_id: list[i].id }); } catch(e){ break; } await new Promise(r => setTimeout(r, 350)); }
             toggleSelectionMode(); showActionLoader(false); isActionActive = false; fetchFiles();
         }
 
         async function emptyTrash() {
-            const list = allItems.filter(i => isItemInTrash(i));
-            isActionActive = true; showActionLoader(true, `ОЧИСТКА (0/${list.length})...`);
-            for (let i = 0; i < list.length; i++) {
-                showActionLoader(true, `ОЧИСТКА (${i+1}/${list.length})...`);
-                try { await apiFetch('/delete', 'POST', {doc_id: list[i].id}); } catch(e){ break; } await new Promise(r => setTimeout(r, 350));
-            }
+            const list = allItems.filter(i => isItemInTrash(i)); isActionActive = true; showActionLoader(true, `ОЧИСТКА (0/${list.length})...`);
+            for (let i = 0; i < list.length; i++) { showActionLoader(true, `ОЧИСТКА (${i+1}/${list.length})...`); try { await apiFetch('/delete', 'POST', {doc_id: list[i].id}); } catch(e){ break; } await new Promise(r => setTimeout(r, 350)); }
             showActionLoader(false); isActionActive = false; fetchFiles();
         }
 
@@ -387,25 +359,58 @@
                 });
             }
             showActionLoader(true, `ПЕРЕНОС (0/${toUpdate.length})...`);
-            for (let i = 0; i < toUpdate.length; i++) {
-                showActionLoader(true, `ПЕРЕНОС (${i+1}/${toUpdate.length})...`);
-                try { await apiFetch('/move', 'POST', { items: [toUpdate[i]] }); } catch(e){ break; } await new Promise(r => setTimeout(r, 350));
-            }
+            for (let i = 0; i < toUpdate.length; i++) { showActionLoader(true, `ПЕРЕНОС (${i+1}/${toUpdate.length})...`); try { await apiFetch('/move', 'POST', { items: [toUpdate[i]] }); } catch(e){ break; } await new Promise(r => setTimeout(r, 350)); }
             cancelMove(); showActionLoader(false); isActionActive = false; fetchFiles();
         }
 
         // --- ЗАГРУЗКА ---
+        function createFolder(n) { 
+            n = n.trim(); const isUrl = /^(https?:\/\/[^\s]+)$/i.test(n) || /^([a-zA-Z0-9а-яА-ЯёЁ-]+\.)+[a-zA-Zа-яА-ЯёЁ]{2,}(\/[^\s]*)?$/i.test(n); 
+            if (isUrl && !n.includes(' ')) { 
+                let urlToSave = n; if (!/^https?:\/\//i.test(urlToSave)) urlToSave = 'https://' + urlToSave; let domain = "Ссылка"; try { domain = new URL(urlToSave).hostname.replace(/^www\./i, ''); } catch(e){} 
+                const file = new File([new Blob(["link"], { type: 'text/plain' })], `${domain}.weblink`, { type: 'text/plain' }); 
+                if (queue.length === 0) { uploadBatchTotal = 1; uploadBatchCurrent = 0; } else { uploadBatchTotal += 1; }
+                queue.push({ file: file, status: "Ожидание", targetPath: currentPath.join('/'), linkUrl: urlToSave }); 
+                document.getElementById('progressContainer').classList.remove('hidden'); processQueue(); 
+            } else { currentPath.push(n); applyFilters(); } 
+        }
+
+        function handleFiles(files) { 
+            const targetPath = currentPath.join('/'); 
+            if (queue.length === 0) { uploadBatchTotal = files.length; uploadBatchCurrent = 0; } else { uploadBatchTotal += files.length; }
+            for (const f of files) queue.push({ file: f, status: "Ожидание", targetPath: targetPath }); 
+            document.getElementById('progressContainer').classList.remove('hidden'); processQueue(); 
+        }
+
+        async function processQueue() { 
+            if (isProcessing) return; isProcessing = true; 
+            while (queue.some(i => i.status === "Ожидание")) { 
+                let item = queue.find(i => i.status === "Ожидание");
+                uploadBatchCurrent++;
+                item.batchText = `${uploadBatchCurrent} из ${uploadBatchTotal}`;
+                await uploadItem(item); 
+                await new Promise(r => setTimeout(r, 500)); 
+            } 
+            isProcessing = false; queue = []; uploadBatchTotal = 0; uploadBatchCurrent = 0;
+            document.getElementById('progressContainer').classList.add('hidden'); fetchFiles(); 
+        }
+
         function uploadItem(item) {
             return new Promise((resolve) => {
                 const doUpload = (captchaData = {}) => {
                     item.status = "Загрузка"; 
                     const fd = new FormData(); fd.append("file", item.file); 
                     let finalPath = item.targetPath; if (item.linkUrl) finalPath = finalPath ? finalPath + "," + LINK_PREFIX + item.linkUrl : LINK_PREFIX + item.linkUrl; fd.append("folder_path", finalPath); 
-                    
                     if (captchaData.captcha_sid) { fd.append("captcha_sid", captchaData.captcha_sid); fd.append("captcha_key", captchaData.captcha_key); }
                     
                     const x = new XMLHttpRequest(); x.open("POST", `${API_URL}/upload${VK_PARAMS}`);
-                    x.upload.onprogress = (e) => { const p = Math.round((e.loaded/e.total)*100); document.getElementById('progressBar').style.width = p+'%'; document.getElementById('progressPercent').innerText = p+'%'; document.getElementById('progressFileName').innerText = item.file.name; };
+                    x.upload.onprogress = (e) => { 
+                        const p = Math.round((e.loaded/e.total)*100); 
+                        document.getElementById('progressBar').style.width = p+'%'; 
+                        document.getElementById('progressPercent').innerText = p+'%'; 
+                        // СТИЛЬНЫЙ ВЫВОД: "Имя файла • 1 из 5"
+                        document.getElementById('progressFileName').innerText = `${item.file.name} • ${item.batchText}`; 
+                    };
                     x.onload = async () => { 
                         if (x.status === 200) { item.status = "Готово"; resolve(); } 
                         else if (x.status === 403) {
@@ -414,7 +419,7 @@
                                 if (data.type === "captcha") {
                                     triggerCaptchaUI("ВВЕДИТЕ КОД!");
                                     const solved = await showCaptchaModal(data.sid, data.img);
-                                    resetCaptchaUI(); doUpload(solved); return; // Повторяем отправку!
+                                    resetCaptchaUI(); doUpload(solved); return; 
                                 }
                             } catch(e) {}
                             item.status = "Ожидание"; resolve();
@@ -480,10 +485,6 @@
         function formatDate(ts) { if (!ts) return '...'; let d = new Date(ts < 10000000000 ? ts * 1000 : ts); return d.toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
         function renameFileById(id, currentName, isWeblink) { const file = allItems.find(i => i.id == id); if (!file) return; uiPrompt(isWeblink ? 'Имя ссылки' : 'Имя файла', currentName, (n) => { renameItem('file', file, isWeblink ? n + '.weblink' : n); }); }
         function downloadFile(u, t) { const link = document.createElement('a'); link.href = `${API_URL}/download-proxy?url=${encodeURIComponent(u)}&title=${encodeURIComponent(t)}${VK_PARAMS.replace('?', '&')}`; link.target = '_blank'; document.body.appendChild(link); link.click(); document.body.removeChild(link); }
-
-        function createFolder(n) { n = n.trim(); const isUrl = /^(https?:\/\/[^\s]+)$/i.test(n) || /^([a-zA-Z0-9а-яА-ЯёЁ-]+\.)+[a-zA-Zа-яА-ЯёЁ]{2,}(\/[^\s]*)?$/i.test(n); if (isUrl && !n.includes(' ')) { let urlToSave = n; if (!/^https?:\/\//i.test(urlToSave)) urlToSave = 'https://' + urlToSave; let domain = "Ссылка"; try { domain = new URL(urlToSave).hostname.replace(/^www\./i, ''); } catch(e){} const file = new File([new Blob(["link"], { type: 'text/plain' })], `${domain}.weblink`, { type: 'text/plain' }); queue.push({ file: file, status: "Ожидание", targetPath: currentPath.join('/'), linkUrl: urlToSave }); document.getElementById('progressContainer').classList.remove('hidden'); processQueue(); } else { currentPath.push(n); applyFilters(); } }
-        function handleFiles(files) { const targetPath = currentPath.join('/'); for (const f of files) queue.push({ file: f, status: "Ожидание", targetPath: targetPath }); document.getElementById('progressContainer').classList.remove('hidden'); processQueue(); }
-        async function processQueue() { if (isProcessing) return; isProcessing = true; while (queue.some(i => i.status === "Ожидание")) { await uploadItem(queue.find(i => i.status === "Ожидание")); await new Promise(r => setTimeout(r, 500)); } isProcessing = false; document.getElementById('progressContainer').classList.add('hidden'); fetchFiles(); }
 
         async function handleWeblinkAction(fileUrl, title, action) { showActionLoader(true, "ЧТЕНИЕ..."); try { const proxyUrl = `${API_URL}/download-proxy?url=${encodeURIComponent(fileUrl)}&title=link${VK_PARAMS.replace('?', '&')}`; let actualLink = await (await fetch(proxyUrl)).text(); actualLink = actualLink.trim().replace(/^['"]|['"]$/g, ''); showActionLoader(false); if (!actualLink || !actualLink.startsWith('http')) return uiAlert('Ошибка чтения', 'Не удалось прочитать ссылку.'); if (action === 'open') window.open(actualLink, '_blank'); else if (action === 'share') uiCopyLink(actualLink); } catch (e) { showActionLoader(false); uiAlert('Ошибка', 'Не удалось прочитать ссылку через сервер.'); console.error(e); } }
 

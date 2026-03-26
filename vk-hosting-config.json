@@ -1,7 +1,7 @@
 {
   "static_path": "dist",
   "app_id": 54494434,
-  "version": "2.6.8",
+  "version": "2.6.9",
   "endpoints": {
     "mobile": "index.html",
     "mvk": "index.html",

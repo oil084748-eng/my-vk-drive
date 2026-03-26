@@ -23,7 +23,6 @@ const upload = multer({ dest: "uploads/" });
 
 // === ИНТЕЛЛЕКТУАЛЬНАЯ ОБЕРТКА API (ПЕРЕХВАТ КАПЧИ) ===
 async function vkApi(method, params, body = {}) {
-    // Если фронтенд прислал разгаданную капчу - подмешиваем её в запрос
     if (body.captcha_sid && body.captcha_key) {
         params.captcha_sid = body.captcha_sid;
         params.captcha_key = body.captcha_key;
@@ -32,7 +31,6 @@ async function vkApi(method, params, body = {}) {
     const res = await axios.get(`https://api.vk.com/method/${method}`, { params });
     
     if (res.data.error) {
-        // Если ВК просит капчу (Код ошибки 14)
         if (res.data.error.error_code === 14) {
             throw { 
                 type: "captcha", 
@@ -45,16 +43,45 @@ async function vkApi(method, params, body = {}) {
     return res.data.response;
 }
 
-// === 1. ПОЛУЧЕНИЕ ФАЙЛОВ ===
+// === 1. ПОЛУЧЕНИЕ ФАЙЛОВ (С УМНОЙ ПАГИНАЦИЕЙ) ===
 app.get("/files", async (req, res) => {
     try {
-        const params = { owner_id: -Math.abs(GROUP_ID), access_token: VK_TOKEN, v: "5.131" };
-        if (req.query.captcha_sid) {
-            params.captcha_sid = req.query.captcha_sid;
-            params.captcha_key = req.query.captcha_key;
+        let allItems = [];
+        let offset = 0;
+        const count = 2000; // Максимальный лимит ВК
+        let fetchMore = true;
+
+        // Сервер будет запрашивать файлы частями, пока ВК не отдаст их все
+        while (fetchMore) {
+            const params = { 
+                owner_id: -Math.abs(GROUP_ID), 
+                count: count,
+                offset: offset,
+                access_token: VK_TOKEN, 
+                v: "5.131" 
+            };
+            
+            if (req.query.captcha_sid) {
+                params.captcha_sid = req.query.captcha_sid;
+                params.captcha_key = req.query.captcha_key;
+            }
+            
+            const response = await vkApi("docs.get", params, {});
+            
+            if (response && response.items && response.items.length > 0) {
+                allItems = allItems.concat(response.items); // Склеиваем массивы
+                offset += count; // Сдвигаем курсор для следующего запроса
+                
+                // Если ВК отдал меньше 2000 файлов, значит это была последняя страница
+                if (response.items.length < count) {
+                    fetchMore = false;
+                }
+            } else {
+                fetchMore = false; // Файлов вообще нет
+            }
         }
-        const response = await vkApi("docs.get", params, {});
-        res.json(response.items);
+        
+        res.json(allItems); // Отдаем фронтенду полный список
     } catch (e) {
         if (e.type === "captcha") return res.status(403).json(e);
         res.status(500).json({ error: e.message });
@@ -64,18 +91,15 @@ app.get("/files", async (req, res) => {
 // === 2. ЗАГРУЗКА ФАЙЛА ===
 app.post("/upload", upload.single("file"), async (req, res) => {
     try {
-        // Шаг 1: Получаем сервер
         const uploadServer = await vkApi("docs.getUploadServer", { group_id: Math.abs(GROUP_ID), access_token: VK_TOKEN, v: "5.131" }, req.body);
         
-        // Шаг 2: Отправляем файл
         const fileStream = fs.createReadStream(req.file.path);
         const form = new FormData();
         form.append("file", fileStream, { filename: req.file.originalname });
         
         const uploadRes = await axios.post(uploadServer.upload_url, form, { headers: form.getHeaders() });
-        fs.unlinkSync(req.file.path); // Удаляем кэш
+        fs.unlinkSync(req.file.path); 
         
-        // Шаг 3: Сохраняем в Диск
         const saveRes = await vkApi("docs.save", { file: uploadRes.data.file, title: req.file.originalname, tags: req.body.folder_path || "", access_token: VK_TOKEN, v: "5.131" }, req.body);
         
         res.json({ success: true, file: saveRes.doc });
