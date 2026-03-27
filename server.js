@@ -18,22 +18,16 @@ const GROUP_ID = "236017708";
 
 const upload = multer({ dest: "uploads/" });
 
-// Универсальный вызов API (Фикс иероглифов и падений)
 async function vkApi(method, params, body = {}) {
-    const apiParams = { 
-        ...params, 
-        access_token: VK_TOKEN, 
-        v: "5.131" 
-    };
-    
+    const apiParams = { ...params, access_token: VK_TOKEN, v: "5.131" };
     if (body.captcha_sid && body.captcha_key) {
         apiParams.captcha_sid = body.captcha_sid;
         apiParams.captcha_key = body.captcha_key;
     }
 
     try {
-        // Отправляем через GET-параметры (самый надежный способ для кодировки кириллицы)
-        const res = await axios.get(`https://api.vk.com/method/${method}`, { params: apiParams });
+        const queryParams = new URLSearchParams(apiParams).toString();
+        const res = await axios.post(`https://api.vk.com/method/${method}`, queryParams);
         
         if (res.data.error) {
             if (res.data.error.error_code === 14) {
@@ -44,7 +38,7 @@ async function vkApi(method, params, body = {}) {
         return res.data.response;
     } catch (e) {
         if (e.type === "captcha") throw e;
-        console.error(`[VK ERROR] Method: ${method}, Message: ${e.message}`);
+        console.error(`[VK ERROR] ${method}: ${e.message}`);
         throw e;
     }
 }
@@ -69,23 +63,32 @@ app.get("/files", async (req, res) => {
 
 app.post("/upload", upload.single("file"), async (req, res) => {
     try {
-        if (!req.file) throw new Error("Файл не получен сервером");
-        const fileName = req.body.original_name || req.file.originalname || "file";
+        if (!req.file) throw new Error("Файл не дошел до сервера");
+        
+        // 1. Настоящее имя для отображения в ВК
+        const realFileName = req.body.original_name || req.file.originalname;
+        // 2. Техническое имя для обхода бага кодировки серверов ВК (оставляем только расширение)
+        const safePhysicalName = "upload_" + Date.now() + path.extname(req.file.originalname);
         
         const uploadServer = await vkApi("docs.getUploadServer", { group_id: Math.abs(GROUP_ID) }, req.body);
         
         const form = new FormData();
-        form.append("file", fs.createReadStream(req.file.path), { filename: fileName });
-        const uploadRes = await axios.post(uploadServer.upload_url, form, { headers: form.getHeaders() });
+        form.append("file", fs.createReadStream(req.file.path), { filename: safePhysicalName });
+        
+        // Добавлены лимиты Infinity, чтобы не падало на больших файлах
+        const uploadRes = await axios.post(uploadServer.upload_url, form, { 
+            headers: form.getHeaders(),
+            maxBodyLength: Infinity,
+            maxContentLength: Infinity
+        });
         
         if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
 
-        const saveRes = await vkApi("docs.save", { 
-            file: uploadRes.data.file, 
-            title: fileName, 
-            tags: req.body.folder_path || "" 
-        }, req.body);
-        
+        if (!uploadRes.data || !uploadRes.data.file) {
+            throw new Error("ВК не вернул хэш файла. Возможно, неподдерживаемый формат.");
+        }
+
+        const saveRes = await vkApi("docs.save", { file: uploadRes.data.file, title: realFileName, tags: req.body.folder_path || "" }, req.body);
         res.json({ success: true, file: saveRes.doc });
     } catch (e) {
         if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
@@ -121,8 +124,8 @@ app.get("/download-proxy", async (req, res) => {
         const response = await axios({ url: req.query.url, method: 'GET', responseType: 'stream' });
         res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(req.query.title)}`);
         response.data.pipe(res);
-    } catch (e) { res.status(500).send("Error"); }
+    } catch (e) { res.status(500).send("Proxy error"); }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Server ready on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Сервер запущен на порту ${PORT}`));
