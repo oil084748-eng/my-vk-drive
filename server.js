@@ -5,10 +5,10 @@ const axios = require("axios");
 const FormData = require("form-data");
 const fs = require("fs");
 const path = require("path");
+const qs = require("querystring"); // 🔥 ДОБАВИЛИ МОДУЛЬ ДЛЯ КОДИРОВАНИЯ СИМВОЛОВ
 
 const app = express();
 
-// Настройки CORS
 app.use(cors());
 app.use(express.json());
 
@@ -17,83 +17,57 @@ if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir);
 }
 
-// Токен и ID группы
 const VK_TOKEN = "vk1.a.9IWAg6xUmeHq-2qOjlrAG2nNpYS4s0GYkUrKu8lMwXmrhUSgQnpgdj0cmZrRS13ZwtenBW3dPGW2xZtlpkWchwprwx9rTK1LM0jRpkWd6Xs6eGQgOPJPDfyydEFCiI1vSUXW8JMsk-tDk6h3ujaB8uAdRoXae0seS9CUM6EI53b3ILCTytawu-bJC92CuGWN7hcA3z4rmPUU7nmk02yQcg";
 const GROUP_ID = "236017708"; 
 
 const upload = multer({ dest: "uploads/" });
 
-// Логирование запросов (полезно для отладки в панели Render)
 app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
     next();
 });
 
-// === ИНТЕЛЛЕКТУАЛЬНАЯ ОБЕРТКА API (ПЕРЕХВАТ КАПЧИ) ===
+// === ИНТЕЛЛЕКТУАЛЬНАЯ ОБЕРТКА API (ТЕПЕРЬ ТОЛЬКО POST) ===
 async function vkApi(method, params, body = {}) {
-    // Если фронтенд прислал разгаданную капчу - подмешиваем её в запрос
     if (body.captcha_sid && body.captcha_key) {
         params.captcha_sid = body.captcha_sid;
         params.captcha_key = body.captcha_key;
     }
 
-    const res = await axios.get(`https://api.vk.com/method/${method}`, { params });
+    // 🔥 ВСЕ запросы к ВК теперь идут через POST. Это решает 100% проблем с кавычками, плюсами, ссылками и эмодзи.
+    const res = await axios.post(`https://api.vk.com/method/${method}`, qs.stringify(params), {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    });
     
     if (res.data.error) {
-        // Если ВК просит капчу (Код ошибки 14)
         if (res.data.error.error_code === 14) {
-            throw { 
-                type: "captcha", 
-                sid: res.data.error.captcha_sid, 
-                img: res.data.error.captcha_img 
-            };
+            throw { type: "captcha", sid: res.data.error.captcha_sid, img: res.data.error.captcha_img };
         }
         throw new Error(res.data.error.error_msg);
     }
     return res.data.response;
 }
 
-// === 1. ПОЛУЧЕНИЕ ФАЙЛОВ (С УМНОЙ ПАГИНАЦИЕЙ И ПАПКАМИ) ===
+// === 1. ПОЛУЧЕНИЕ ФАЙЛОВ ===
 app.get("/files", async (req, res) => {
     try {
         let allItems = [];
         let offset = 0;
-        const count = 2000; // Максимальный лимит ВК
+        const count = 2000; 
         let fetchMore = true;
 
-        // Сервер будет запрашивать файлы частями, пока ВК не отдаст их все
         while (fetchMore) {
-            const params = { 
-                owner_id: -Math.abs(GROUP_ID), 
-                count: count,
-                offset: offset,
-                return_tags: 1, // 🔥 ОБЯЗАТЕЛЬНО: Включает папки!
-                access_token: VK_TOKEN, 
-                v: "5.131" 
-            };
-            
-            // Перехват параметров капчи, если они пришли при обновлении списка
-            if (req.query.captcha_sid) {
-                params.captcha_sid = req.query.captcha_sid;
-                params.captcha_key = req.query.captcha_key;
-            }
+            const params = { owner_id: -Math.abs(GROUP_ID), count: count, offset: offset, return_tags: 1, access_token: VK_TOKEN, v: "5.131" };
+            if (req.query.captcha_sid) { params.captcha_sid = req.query.captcha_sid; params.captcha_key = req.query.captcha_key; }
             
             const response = await vkApi("docs.get", params, {});
-            
             if (response && response.items && response.items.length > 0) {
-                allItems = allItems.concat(response.items); // Склеиваем массивы
-                offset += count; // Сдвигаем курсор для следующего запроса
-                
-                // Если ВК отдал меньше 2000 файлов, значит это была последняя страница
-                if (response.items.length < count) {
-                    fetchMore = false;
-                }
-            } else {
-                fetchMore = false; // Файлов вообще нет
-            }
+                allItems = allItems.concat(response.items); 
+                offset += count; 
+                if (response.items.length < count) fetchMore = false;
+            } else { fetchMore = false; }
         }
-        
-        res.json(allItems); // Отдаем фронтенду полный список с папками!
+        res.json(allItems); 
     } catch (e) {
         if (e.type === "captcha") return res.status(403).json(e);
         res.status(500).json({ error: e.message });
@@ -103,20 +77,16 @@ app.get("/files", async (req, res) => {
 // === 2. ЗАГРУЗКА ФАЙЛА ===
 app.post("/upload", upload.single("file"), async (req, res) => {
     try {
-        // Шаг 1: Получаем сервер для загрузки
         const uploadServer = await vkApi("docs.getUploadServer", { group_id: Math.abs(GROUP_ID), access_token: VK_TOKEN, v: "5.131" }, req.body);
-        
-        // Шаг 2: Отправляем физический файл на сервер ВК
+        const fileName = req.body.original_name || req.file.originalname; 
         const fileStream = fs.createReadStream(req.file.path);
         const form = new FormData();
-        form.append("file", fileStream, { filename: req.file.originalname });
+        form.append("file", fileStream, { filename: fileName }); 
         
         const uploadRes = await axios.post(uploadServer.upload_url, form, { headers: form.getHeaders() });
-        fs.unlinkSync(req.file.path); // Удаляем временный файл с Render
+        fs.unlinkSync(req.file.path); 
         
-        // Шаг 3: Сохраняем в Диск группы
-        const saveRes = await vkApi("docs.save", { file: uploadRes.data.file, title: req.file.originalname, tags: req.body.folder_path || "", access_token: VK_TOKEN, v: "5.131" }, req.body);
-        
+        const saveRes = await vkApi("docs.save", { file: uploadRes.data.file, title: fileName, tags: req.body.folder_path || "", access_token: VK_TOKEN, v: "5.131" }, req.body);
         res.json({ success: true, file: saveRes.doc });
     } catch (e) {
         if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);

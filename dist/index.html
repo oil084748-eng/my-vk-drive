@@ -16,52 +16,23 @@
             --red-main: #b96a6a; --red-soft: #f0dede;
             --gray-soft: #e8ecf2; --gray-mid: #5f6e7a;
         }
-
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: var(--bg-main); color: var(--text-main);
-            padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .bg-blue-600 { background-color: var(--blue-main) !important; }
-        .bg-blue-50  { background-color: var(--blue-soft) !important; }
-        .text-blue-600, .text-blue-500 { color: var(--blue-main) !important; }
-        .bg-green-600 { background-color: var(--green-main) !important; }
-        .bg-green-50  { background-color: var(--green-soft) !important; }
-        .text-green-600 { color: var(--green-main) !important; }
-        .bg-red-500 { background-color: var(--red-main) !important; }
-        .bg-red-50  { background-color: var(--red-soft) !important; }
-        .text-red-500 { color: var(--red-main) !important; }
-        .bg-gray-50  { background-color: var(--gray-soft) !important; }
-        .bg-gray-100 { background-color: #e0e6ed !important; }
-        .text-gray-400 { color: var(--gray-mid) !important; }
-        .text-gray-800 { color: var(--text-main) !important; }
-        .text-gray-500 { color: #26334a !important; }
-        .text-gray-600 { color: #1f2a3c !important; }
-
+        body { font-family: 'Roboto', sans-serif; background-color: var(--bg-main); color: var(--text-main); padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); -webkit-tap-highlight-color: transparent; }
+        .bg-blue-600 { background-color: var(--blue-main) !important; } .bg-blue-50 { background-color: var(--blue-soft) !important; } .text-blue-600, .text-blue-500 { color: var(--blue-main) !important; }
+        .bg-green-600 { background-color: var(--green-main) !important; } .bg-green-50 { background-color: var(--green-soft) !important; } .text-green-600 { color: var(--green-main) !important; }
+        .bg-red-500 { background-color: var(--red-main) !important; } .bg-red-50 { background-color: var(--red-soft) !important; } .text-red-500 { color: var(--red-main) !important; }
+        .bg-gray-50 { background-color: var(--gray-soft) !important; } .bg-gray-100 { background-color: #e0e6ed !important; } .text-gray-400 { color: var(--gray-mid) !important; } .text-gray-800 { color: var(--text-main) !important; } .text-gray-500 { color: #26334a !important; }
         .btn-light { background-color: var(--gray-soft) !important; color: #26334a !important; font-weight: 600; }
-        .border-gray-100 { border-color: #dfe4eb !important; }
-        .border-blue-100 { border-color: #c5dfeb !important; }
-        .border-green-100 { border-color: #c8e4d7 !important; }
-        .border-red-100 { border-color: #e6cfcf !important; }
-
+        .border-gray-100 { border-color: #dfe4eb !important; } .border-blue-100 { border-color: #c5dfeb !important; }
         .file-card.selected { border-color: var(--blue-main); background-color: var(--blue-soft); box-shadow: 0 0 0 3px rgba(61, 126, 179, 0.15); }
-        button, .touch-target { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); font-weight: 600; }
-        button:active, .touch-target:active { transform: scale(0.95); opacity: 0.85; }
-
+        button, .touch-target { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); font-weight: 600; } button:active, .touch-target:active { transform: scale(0.95); opacity: 0.85; }
         .breadcrumb-item:not(:last-child)::after { content: '›'; margin: 0 8px; color: var(--gray-mid); font-size: 18px; }
         .touch-target { min-height: 44px; min-width: 44px; display: flex; align-items: center; justify-content: center; }
         .sticky-top-block { position: sticky; top: 0; z-index: 100; background-color: white; }
-        .animate-slide-down { animation: slideDown 0.2s ease-out; }
-        .animate-slide-bottom { animation: slideUp 0.3s ease-out; }
-        @keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .animate-slide-down { animation: slideDown 0.2s ease-out; } .animate-slide-bottom { animation: slideUp 0.3s ease-out; }
+        @keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } } @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         .file-card { will-change: transform, opacity; transition: all 0.2s; }
-        
         .bg-captcha-alert { background-color: var(--red-soft) !important; color: var(--red-main) !important; }
         #captchaModal .modal-content { border-bottom: 8px solid var(--red-soft); }
-
         .iframe-scroll-wrapper { -webkit-overflow-scrolling: touch; overflow-y: auto; }
         .office-zoom-hack { width: 73% !important; height: 73% !important; transform: scale(1.37); transform-origin: top left; }
     </style>
@@ -69,24 +40,15 @@
 <body class="antialiased">
 
     <div id="accessGate" class="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center p-6 text-center transition-opacity duration-300">
-        <div id="accessLoading" class="flex flex-col items-center">
-            <div class="animate-spin w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full mb-4"></div>
-            <span class="text-[10px] font-black uppercase tracking-widest text-gray-400">Проверка доступа...</span>
-        </div>
-        <div id="accessDenied" class="hidden flex flex-col items-center w-full max-w-xs">
-            <div class="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mb-6"><i data-lucide="lock" class="text-red-500 w-12 h-12"></i></div>
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Доступ закрыт</h2>
-            <div class="bg-gray-50 p-5 rounded-2xl mb-8 border border-gray-100"><p class="text-gray-600 text-sm leading-relaxed font-medium">Этот Диск является приватным.<br><br>Доступ разрешен только участникам закрытой группы. Подайте заявку и дождитесь её одобрения администратором.</p></div>
-            <button onclick="joinTargetGroup()" class="bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold uppercase tracking-widest text-xs shadow-xl shadow-blue-200 w-full active:scale-95 transition-transform mb-4">Подать заявку</button>
-            <button onclick="checkGroupAccess()" class="text-blue-500 font-bold uppercase tracking-widest text-[10px] py-4 active:scale-95 transition-transform w-full bg-blue-50 rounded-xl">Я уже участник (Обновить)</button>
-        </div>
+        <div id="accessLoading" class="flex flex-col items-center"><div class="animate-spin w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full mb-4"></div><span class="text-[10px] font-black uppercase tracking-widest text-gray-400">Проверка доступа...</span></div>
+        <div id="accessDenied" class="hidden flex flex-col items-center w-full max-w-xs"><div class="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mb-6"><i data-lucide="lock" class="text-red-500 w-12 h-12"></i></div><h2 class="text-2xl font-bold text-gray-800 mb-4">Доступ закрыт</h2><div class="bg-gray-50 p-5 rounded-2xl mb-8 border border-gray-100"><p class="text-gray-600 text-sm leading-relaxed font-medium">Этот Диск является приватным.</p></div><button onclick="joinTargetGroup()" class="bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold uppercase tracking-widest text-xs shadow-xl shadow-blue-200 w-full active:scale-95 transition-transform mb-4">Подать заявку</button><button onclick="checkGroupAccess()" class="text-blue-500 font-bold uppercase tracking-widest text-[10px] py-4 active:scale-95 transition-transform w-full bg-blue-50 rounded-xl">Я уже участник</button></div>
     </div>
 
     <div id="captchaModal" class="hidden fixed inset-0 flex items-center justify-center p-6 z-[4000] backdrop-blur-sm bg-black/40">
         <div class="bg-white rounded-3xl p-7 max-w-sm w-full text-center shadow-2xl modal-content">
             <img id="captchaImg" src="" class="w-full h-24 object-cover rounded-xl mb-4 bg-gray-100 border border-gray-200" alt="Captcha">
             <h3 class="text-xl font-bold mb-2 text-gray-800">Защита от роботов</h3>
-            <p class="text-xs text-gray-500 mb-5">ВКонтакте просит ввести код с картинки, чтобы продолжить операцию.</p>
+            <p class="text-xs text-gray-500 mb-5">ВКонтакте просит ввести код с картинки.</p>
             <input type="text" id="captchaInput" class="w-full p-4 bg-gray-50 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 mb-4 font-bold text-center border border-gray-100 text-gray-800 tracking-widest uppercase text-lg" placeholder="ВВЕДИТЕ КОД">
             <div class="flex gap-2">
                 <button onclick="closeCaptcha(false)" class="flex-1 py-4 font-bold bg-gray-50 text-gray-500 rounded-2xl active:scale-95 transition-transform text-xs uppercase tracking-widest">Отмена</button>
@@ -180,7 +142,7 @@
     </main>
 
     <footer class="p-10 text-center">
-        <div class="inline-block bg-blue-50 text-blue-600 px-4 py-2 rounded-full text-[10px] font-bold tracking-widest border border-blue-100 uppercase">ВЕРСИЯ: 2.6.9 (STORAGE & PROGRESS PRO)</div>
+        <div class="inline-block bg-blue-50 text-blue-600 px-4 py-2 rounded-full text-[10px] font-bold tracking-widest border border-blue-100 uppercase">ВЕРСИЯ: 2.7.1 (SECURE ESCAPE)</div>
     </footer>
 
     <script>
@@ -194,77 +156,43 @@
         let selectionMode = false; let selectedIds = new Set();
         let currentVisibleItems = { folders: [], files: [] };
         let isActionActive = false;
-        
-        let uploadBatchTotal = 0;
-        let uploadBatchCurrent = 0;
+
+        // 🔥 ЗАЩИТНЫЕ ФУНКЦИИ ОТ КАВЫЧЕК И ИНЪЕКЦИЙ
+        function escHtml(s) { return String(s||"").replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+        function escJs(s) { return String(s||"").replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n').replace(/\r/g, '\\r'); }
 
         vkBridge.send("VKWebAppInit");
         window.onload = () => { lucide.createIcons(); checkGroupAccess(); };
         window.addEventListener('beforeunload', (e) => { if (isActionActive || isProcessing) { e.preventDefault(); e.returnValue = 'Процесс ещё не завершен'; } });
 
-        // --- УМНЫЙ API КЛИЕНТ ---
         async function apiFetch(endpoint, method = 'GET', body = null) {
             let captchaData = {};
             while (true) {
-                let url = `${API_URL}${endpoint}${VK_PARAMS}`;
-                let options = { method };
-                
-                if (method === 'POST') {
-                    options.headers = { 'Content-Type': 'application/json' };
-                    let payload = body ? { ...body } : {};
-                    if (captchaData.captcha_sid) { payload.captcha_sid = captchaData.captcha_sid; payload.captcha_key = captchaData.captcha_key; }
-                    options.body = JSON.stringify(payload);
-                } else {
-                    if (captchaData.captcha_sid) url += `&captcha_sid=${captchaData.captcha_sid}&captcha_key=${encodeURIComponent(captchaData.captcha_key)}`;
-                }
-
+                let url = `${API_URL}${endpoint}${VK_PARAMS}`; let options = { method };
+                if (method === 'POST') { options.headers = { 'Content-Type': 'application/json' }; let payload = body ? { ...body } : {}; if (captchaData.captcha_sid) { payload.captcha_sid = captchaData.captcha_sid; payload.captcha_key = captchaData.captcha_key; } options.body = JSON.stringify(payload); } 
+                else { if (captchaData.captcha_sid) url += `&captcha_sid=${captchaData.captcha_sid}&captcha_key=${encodeURIComponent(captchaData.captcha_key)}`; }
                 const res = await fetch(url, options);
                 if (res.ok) return await res.json();
-                
-                if (res.status === 403) {
-                    const data = await res.json();
-                    if (data.type === "captcha") {
-                        triggerCaptchaUI("ВВЕДИТЕ КОД!");
-                        captchaData = await showCaptchaModal(data.sid, data.img);
-                        resetCaptchaUI(); continue; 
-                    }
-                }
+                if (res.status === 403) { const data = await res.json(); if (data.type === "captcha") { triggerCaptchaUI("ВВЕДИТЕ КОД!"); captchaData = await showCaptchaModal(data.sid, data.img); resetCaptchaUI(); continue; } }
                 throw new Error("API Error");
             }
         }
 
-        // --- ОХРАНА ---
         async function checkGroupAccess() {
             document.getElementById('accessLoading').classList.remove('hidden'); document.getElementById('accessDenied').classList.add('hidden');
-            try {
-                const appId = Number(new URLSearchParams(VK_PARAMS).get('vk_app_id'));
-                if (!appId) throw new Error("No App ID");
-                const authData = await vkBridge.send("VKWebAppGetAuthToken", { "app_id": appId, "scope": "" });
-                const memberCheck = await vkBridge.send("VKWebAppCallAPIMethod", { "method": "groups.isMember", "request_id": "gatekeeper", "params": { "group_id": TARGET_GROUP_ID, "v": "5.131", "access_token": authData.access_token }});
-                if (memberCheck.response === 1) {
-                    const gate = document.getElementById('accessGate');
-                    gate.classList.add('opacity-0', 'pointer-events-none'); setTimeout(() => gate.classList.add('hidden'), 300);
-                    fetchFiles(); 
-                } else { document.getElementById('accessLoading').classList.add('hidden'); document.getElementById('accessDenied').classList.remove('hidden'); lucide.createIcons(); }
+            try { const appId = Number(new URLSearchParams(VK_PARAMS).get('vk_app_id')); if (!appId) throw new Error("No App ID"); const authData = await vkBridge.send("VKWebAppGetAuthToken", { "app_id": appId, "scope": "" }); const memberCheck = await vkBridge.send("VKWebAppCallAPIMethod", { "method": "groups.isMember", "request_id": "gatekeeper", "params": { "group_id": TARGET_GROUP_ID, "v": "5.131", "access_token": authData.access_token }});
+                if (memberCheck.response === 1) { const gate = document.getElementById('accessGate'); gate.classList.add('opacity-0', 'pointer-events-none'); setTimeout(() => gate.classList.add('hidden'), 300); fetchFiles(); } 
+                else { document.getElementById('accessLoading').classList.add('hidden'); document.getElementById('accessDenied').classList.remove('hidden'); lucide.createIcons(); }
             } catch (err) { document.getElementById('accessLoading').classList.add('hidden'); document.getElementById('accessDenied').classList.remove('hidden'); lucide.createIcons(); }
         }
         function joinTargetGroup() { vkBridge.send("VKWebAppJoinGroup", { "group_id": TARGET_GROUP_ID }).then(() => setTimeout(checkGroupAccess, 500)).catch(()=>{}); }
 
-        // --- КАПЧА ---
-        function showCaptchaModal(sid, imgUrl) { 
-            return new Promise((resolve, reject) => { 
-                document.getElementById('captchaImg').src = imgUrl; const input = document.getElementById('captchaInput'); input.value = '';
-                input.onkeydown = (e) => { if(e.key === 'Enter') submitCaptcha(); };
-                document.getElementById('captchaModal').classList.remove('hidden'); activeCaptcha = { sid, resolve, reject };
-                setTimeout(() => input.focus(), 100);
-            }); 
-        }
+        function showCaptchaModal(sid, imgUrl) { return new Promise((resolve, reject) => { document.getElementById('captchaImg').src = imgUrl; const input = document.getElementById('captchaInput'); input.value = ''; input.onkeydown = (e) => { if(e.key === 'Enter') submitCaptcha(); }; document.getElementById('captchaModal').classList.remove('hidden'); activeCaptcha = { sid, resolve, reject }; setTimeout(() => input.focus(), 100); }); }
         function closeCaptcha(success) { document.getElementById('captchaModal').classList.add('hidden'); if (!success && activeCaptcha) activeCaptcha.reject(new Error("Отмена капчи")); activeCaptcha = null; }
         function submitCaptcha() { const val = document.getElementById('captchaInput').value.trim(); if (!val || !activeCaptcha) return; const res = { captcha_sid: activeCaptcha.sid, captcha_key: val }; const resolve = activeCaptcha.resolve; closeCaptcha(true); resolve(res); }
         function triggerCaptchaUI(text) { const l = document.getElementById('actionLoader'); if(l) { document.getElementById('actionLoaderText').innerText = text; l.classList.remove('hidden', 'bg-blue-600', 'text-white'); l.classList.add('bg-captcha-alert'); document.getElementById('actionSpinner').classList.add('hidden'); } vkBridge.send("VKWebAppTapticNotificationOccurred", {"type": "error"}); }
         function resetCaptchaUI() { const l = document.getElementById('actionLoader'); if(l) { l.classList.add('hidden'); l.classList.remove('bg-captcha-alert'); l.classList.add('bg-blue-600', 'text-white'); document.getElementById('actionSpinner').classList.remove('hidden'); } }
 
-        // --- УТИЛИТЫ ---
         function safeNavigate(callback) { if (isActionActive || isProcessing) uiConfirm('Прервать процесс?', 'Процесс ещё не завершен', () => { isActionActive = false; isProcessing = false; callback(); }); else callback(); }
         function closeUM() { document.getElementById('universalModal').classList.add('hidden'); }
         function uiAlert(title, desc) { document.getElementById('umTitle').innerText = title; document.getElementById('umDesc').innerText = desc; document.getElementById('umDescContainer').classList.remove('hidden'); document.getElementById('umInput').classList.add('hidden'); document.getElementById('umCancelBtn').classList.add('hidden'); const btn = document.getElementById('umConfirmBtn'); btn.innerText = 'Закрыть'; btn.className = 'w-full bg-blue-600 text-white py-3 rounded-xl font-bold uppercase text-xs tracking-widest'; btn.onclick = closeUM; document.getElementById('universalModal').classList.remove('hidden'); }
@@ -273,14 +201,10 @@
         function uiCopyLink(url) { document.getElementById('umTitle').innerText = 'Ссылка на файл'; document.getElementById('umDescContainer').classList.add('hidden'); const inp = document.getElementById('umInput'); inp.value = url; inp.readOnly = true; inp.classList.remove('hidden'); document.getElementById('umCancelBtn').classList.remove('hidden'); document.getElementById('umCancelBtn').innerText = 'Закрыть'; document.getElementById('umCancelBtn').onclick = closeUM; const btn = document.getElementById('umConfirmBtn'); btn.innerText = 'Копировать'; btn.className = 'flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold uppercase text-xs tracking-widest'; btn.onclick = () => { inp.select(); inp.setSelectionRange(0, 99999); const showSuccess = () => { btn.innerText = 'Скопировано'; btn.classList.replace('bg-blue-600', 'bg-green-600'); setTimeout(closeUM, 1000); }; try { navigator.clipboard.writeText(url).then(showSuccess).catch(() => { document.execCommand('copy'); showSuccess(); }); } catch(e) { document.execCommand('copy'); showSuccess(); } }; document.getElementById('universalModal').classList.remove('hidden'); setTimeout(() => { inp.focus(); inp.select(); }, 100); }
         function showActionLoader(show, text = "Синхронизация...") { const al = document.getElementById('actionLoader'); if (al) { document.getElementById('actionLoaderText').innerText = text; al.classList.toggle('hidden', !show); } }
 
-        // --- ДЕЙСТВИЯ API И ОТОБРАЖЕНИЕ ---
         async function fetchFiles(btn) {
             showActionLoader(true, "СОЕДИНЕНИЕ..."); if (btn && btn.classList) btn.classList.add('animate-spin');
-            try { 
-                allItems = await apiFetch('/files'); 
-                updateStorageDisplay();
-                applyFilters(); 
-            } catch (e) { document.getElementById('fileContainer').innerHTML = '<div class="py-20 text-center text-orange-400 font-bold uppercase text-[10px] italic">Ошибка сети...</div>'; } 
+            try { allItems = await apiFetch('/files'); updateStorageDisplay(); applyFilters(); } 
+            catch (e) { document.getElementById('fileContainer').innerHTML = '<div class="py-20 text-center text-orange-400 font-bold uppercase text-[10px] italic">Ошибка сети...</div>'; } 
             finally { showActionLoader(false); if (btn && btn.classList) setTimeout(() => btn.classList.remove('animate-spin'), 500); }
         }
         
@@ -289,8 +213,7 @@
             let sizeStr = (totalBytes / (1024 * 1024 * 1024)).toFixed(2) + ' ГБ';
             if (totalBytes < 1024 * 1024 * 1024) sizeStr = (totalBytes / (1024 * 1024)).toFixed(1) + ' МБ';
             if (totalBytes === 0) sizeStr = '0 МБ';
-            const el = document.getElementById('storageUsed');
-            if(el) el.innerText = 'Занято: ' + sizeStr;
+            const el = document.getElementById('storageUsed'); if(el) el.innerText = 'Занято: ' + sizeStr;
         }
 
         async function restoreItemById(id) { 
@@ -303,6 +226,9 @@
 
         async function renameItem(type, item, newName) {
             isActionActive = true; let list = [];
+            // 🔥 Защита от запятых (ВК ломает теги с запятыми)
+            newName = newName.trim().replace(/,/g, ' '); 
+
             if (type === 'file') {
                 const f = allItems.find(i => i.id === item.id) || item; let tags = getItemPath(f); const linkTag = extractHiddenLink(f); if (linkTag) tags = tags ? tags + ',' + LINK_PREFIX + linkTag : LINK_PREFIX + linkTag; list.push({id: f.id, new_title: newName, tags: tags});
             } else {
@@ -363,9 +289,13 @@
             cancelMove(); showActionLoader(false); isActionActive = false; fetchFiles();
         }
 
-        // --- ЗАГРУЗКА ---
+        // --- ЗАГРУЗКА И ОЧЕРЕДЬ ---
+        let uploadBatchTotal = 0; let uploadBatchCurrent = 0;
+
         function createFolder(n) { 
-            n = n.trim(); const isUrl = /^(https?:\/\/[^\s]+)$/i.test(n) || /^([a-zA-Z0-9а-яА-ЯёЁ-]+\.)+[a-zA-Zа-яА-ЯёЁ]{2,}(\/[^\s]*)?$/i.test(n); 
+            // 🔥 Защита от запятых (ВК ломает теги с запятыми)
+            n = n.trim().replace(/,/g, ' '); 
+            const isUrl = /^(https?:\/\/[^\s]+)$/i.test(n) || /^([a-zA-Z0-9а-яА-ЯёЁ-]+\.)+[a-zA-Zа-яА-ЯёЁ]{2,}(\/[^\s]*)?$/i.test(n); 
             if (isUrl && !n.includes(' ')) { 
                 let urlToSave = n; if (!/^https?:\/\//i.test(urlToSave)) urlToSave = 'https://' + urlToSave; let domain = "Ссылка"; try { domain = new URL(urlToSave).hostname.replace(/^www\./i, ''); } catch(e){} 
                 const file = new File([new Blob(["link"], { type: 'text/plain' })], `${domain}.weblink`, { type: 'text/plain' }); 
@@ -386,10 +316,8 @@
             if (isProcessing) return; isProcessing = true; 
             while (queue.some(i => i.status === "Ожидание")) { 
                 let item = queue.find(i => i.status === "Ожидание");
-                uploadBatchCurrent++;
-                item.batchText = `${uploadBatchCurrent} из ${uploadBatchTotal}`;
-                await uploadItem(item); 
-                await new Promise(r => setTimeout(r, 500)); 
+                uploadBatchCurrent++; item.batchText = uploadBatchCurrent + " из " + uploadBatchTotal;
+                await uploadItem(item); await new Promise(r => setTimeout(r, 500)); 
             } 
             isProcessing = false; queue = []; uploadBatchTotal = 0; uploadBatchCurrent = 0;
             document.getElementById('progressContainer').classList.add('hidden'); fetchFiles(); 
@@ -400,28 +328,20 @@
                 const doUpload = (captchaData = {}) => {
                     item.status = "Загрузка"; 
                     const fd = new FormData(); fd.append("file", item.file); 
+                    fd.append("original_name", item.file.name); 
+
                     let finalPath = item.targetPath; if (item.linkUrl) finalPath = finalPath ? finalPath + "," + LINK_PREFIX + item.linkUrl : LINK_PREFIX + item.linkUrl; fd.append("folder_path", finalPath); 
                     if (captchaData.captcha_sid) { fd.append("captcha_sid", captchaData.captcha_sid); fd.append("captcha_key", captchaData.captcha_key); }
                     
                     const x = new XMLHttpRequest(); x.open("POST", `${API_URL}/upload${VK_PARAMS}`);
                     x.upload.onprogress = (e) => { 
-                        const p = Math.round((e.loaded/e.total)*100); 
-                        document.getElementById('progressBar').style.width = p+'%'; 
-                        document.getElementById('progressPercent').innerText = p+'%'; 
-                        // СТИЛЬНЫЙ ВЫВОД: "Имя файла • 1 из 5"
-                        document.getElementById('progressFileName').innerText = `${item.file.name} • ${item.batchText}`; 
+                        const p = Math.round((e.loaded/e.total)*100); document.getElementById('progressBar').style.width = p+'%'; document.getElementById('progressPercent').innerText = p+'%'; 
+                        const queueText = item.batchText ? ' • ' + item.batchText : ''; document.getElementById('progressFileName').innerText = item.file.name + queueText; 
                     };
                     x.onload = async () => { 
                         if (x.status === 200) { item.status = "Готово"; resolve(); } 
                         else if (x.status === 403) {
-                            try {
-                                const data = JSON.parse(x.responseText);
-                                if (data.type === "captcha") {
-                                    triggerCaptchaUI("ВВЕДИТЕ КОД!");
-                                    const solved = await showCaptchaModal(data.sid, data.img);
-                                    resetCaptchaUI(); doUpload(solved); return; 
-                                }
-                            } catch(e) {}
+                            try { const data = JSON.parse(x.responseText); if (data.type === "captcha") { triggerCaptchaUI("ВВЕДИТЕ КОД!"); const solved = await showCaptchaModal(data.sid, data.img); resetCaptchaUI(); doUpload(solved); return; } } catch(e) {}
                             item.status = "Ожидание"; resolve();
                         } else { item.status = "Ожидание"; triggerCaptchaUI("ОШИБКА СЕРВЕРА"); setTimeout(resetCaptchaUI, 2000); resolve(); } 
                     };
@@ -449,19 +369,36 @@
             currentVisibleItems.folders = cleanFolders.sort(); currentVisibleItems.files = files; render(currentVisibleItems.folders, currentVisibleItems.files);
         }
 
+        // 🔥 ЗАЩИТА АТРИБУТОВ И ИМЕН В ФАЙЛАХ
         function getFileActionButtons(file, inTrash) {
-            const fName = file.title || ""; const ext = (fName.split('.').pop() || '').toLowerCase(); const isWeblink = ext === 'weblink'; const displayTitle = isWeblink ? fName.replace(/\.weblink$/i, '') : fName; const safeTitle = displayTitle.replace(/'/g, "\\'"); const safeUrl = (file.url || "").replace(/'/g, "\\'");
+            const fName = file.title || ""; const ext = (fName.split('.').pop() || '').toLowerCase(); const isWeblink = ext === 'weblink'; const displayTitle = isWeblink ? fName.replace(/\.weblink$/i, '') : fName; 
+            const safeTitle = escJs(displayTitle); const safeUrl = escJs(file.url || "");
+            
             if (inTrash) return `<button onclick="uiAlert('Полное имя', '${safeTitle}')" class="flex-1 bg-gray-50 text-gray-500 py-2 rounded-xl active:bg-gray-100 transition-colors">Имя</button><button onclick="restoreItemById(${file.id})" class="flex-1 bg-blue-50 text-blue-600 py-2 rounded-xl active:bg-blue-100 transition-colors">Восстановить</button><button onclick="uiConfirm('Стереть навсегда?', 'Удалить из ВК.', () => deleteFileById(${file.id}))" class="flex-1 bg-red-50 text-red-500 py-2 rounded-xl active:bg-red-100 transition-colors">Стереть</button>`;
-            if (isWeblink) { const hiddenUrl = extractHiddenLink(file); if (hiddenUrl) { const safeHiddenUrl = hiddenUrl.replace(/'/g, "\\'"); return `<button onclick="window.open('${safeHiddenUrl}', '_blank')" class="flex-1 min-w-[20%] bg-blue-50 text-blue-600 py-2 rounded-xl active:bg-blue-100 transition-colors">Перейти</button><button onclick="renameFileById(${file.id}, '${safeTitle}', true)" class="flex-1 min-w-[20%] bg-gray-50 text-gray-500 py-2 rounded-xl active:bg-gray-100 transition-colors">Имя</button><button onclick="uiCopyLink('${safeHiddenUrl}')" class="flex-1 min-w-[20%] bg-green-50 text-green-600 py-2 rounded-xl active:bg-green-100 transition-colors">ССЫЛКА</button>`; } else { return `<button onclick="handleWeblinkAction('${safeUrl}', '${safeTitle}', 'open')" class="flex-1 min-w-[20%] bg-blue-50 text-blue-600 py-2 rounded-xl active:bg-blue-100 transition-colors">Перейти</button><button onclick="renameFileById(${file.id}, '${safeTitle}', true)" class="flex-1 min-w-[20%] bg-gray-50 text-gray-500 py-2 rounded-xl active:bg-gray-100 transition-colors">Имя</button><button onclick="handleWeblinkAction('${safeUrl}', '${safeTitle}', 'share')" class="flex-1 min-w-[20%] bg-green-50 text-green-600 py-2 rounded-xl active:bg-green-100 transition-colors">ССЫЛКА</button>`; } }
+            
+            if (isWeblink) { const hiddenUrl = extractHiddenLink(file); if (hiddenUrl) { const safeHiddenUrl = escJs(hiddenUrl); return `<button onclick="window.open('${safeHiddenUrl}', '_blank')" class="flex-1 min-w-[20%] bg-blue-50 text-blue-600 py-2 rounded-xl active:bg-blue-100 transition-colors">Перейти</button><button onclick="renameFileById(${file.id}, '${safeTitle}', true)" class="flex-1 min-w-[20%] bg-gray-50 text-gray-500 py-2 rounded-xl active:bg-gray-100 transition-colors">Имя</button><button onclick="uiCopyLink('${safeHiddenUrl}')" class="flex-1 min-w-[20%] bg-green-50 text-green-600 py-2 rounded-xl active:bg-green-100 transition-colors">ССЫЛКА</button>`; } else { return `<button onclick="handleWeblinkAction('${safeUrl}', '${safeTitle}', 'open')" class="flex-1 min-w-[20%] bg-blue-50 text-blue-600 py-2 rounded-xl active:bg-blue-100 transition-colors">Перейти</button><button onclick="renameFileById(${file.id}, '${safeTitle}', true)" class="flex-1 min-w-[20%] bg-gray-50 text-gray-500 py-2 rounded-xl active:bg-gray-100 transition-colors">Имя</button><button onclick="handleWeblinkAction('${safeUrl}', '${safeTitle}', 'share')" class="flex-1 min-w-[20%] bg-green-50 text-green-600 py-2 rounded-xl active:bg-green-100 transition-colors">ССЫЛКА</button>`; } }
+            
             const isImage = ['jpg','jpeg','png','gif','webp','bmp','svg'].includes(ext); const isVideo = ['mp4','mov','webm','avi','mkv'].includes(ext); const isArchive = ['zip','rar','7z','tar','gz'].includes(ext); const isPC = !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent); const canPreview = isImage || isVideo || ['doc','docx','xls','xlsx','ppt','pptx','txt','csv','json','md','pdf'].includes(ext) || (isPC && isArchive);
             let previewAction = ''; if (isImage) previewAction = `previewImage('${safeUrl}')`; else if (canPreview) previewAction = `handlePreview('${safeUrl}', '${ext}', '${safeTitle}', '${file.owner_id}', '${file.id}')`;
             return `${canPreview ? `<button onclick="${previewAction}" class="flex-1 min-w-[20%] bg-purple-50 text-purple-600 py-2 rounded-xl active:bg-purple-100 transition-colors">Смотреть</button>` : ''}<button onclick="downloadFile('${safeUrl}', '${safeTitle}')" class="flex-1 min-w-[20%] bg-blue-50 text-blue-600 py-2 rounded-xl active:bg-blue-100 transition-colors">Скачать</button><button onclick="renameFileById(${file.id}, '${safeTitle}', false)" class="flex-1 min-w-[20%] bg-gray-50 text-gray-500 py-2 rounded-xl active:bg-gray-100 transition-colors">Имя</button><button onclick="uiCopyLink('${safeUrl}')" class="flex-1 min-w-[20%] bg-green-50 text-green-600 py-2 rounded-xl active:bg-green-100 transition-colors">ССЫЛКА</button>`;
         }
 
+        // 🔥 ОТОБРАЖЕНИЕ БЕЗ СЛОМАННОГО HTML
         function render(folders, files) {
             const container = document.getElementById('fileContainer'); container.innerHTML = ''; updateBreadcrumb(); const inTrash = currentPath[0] === '.trash'; const hideActionButtons = selectionMode || clipboard !== null;
-            folders.forEach(f => { const div = document.createElement('div'); const isSelected = selectedIds.has('folder:'+f); div.className = `bg-white p-4 rounded-2xl flex flex-col gap-3 shadow-sm border border-gray-100 file-card ${isSelected ? 'selected' : ''}`; div.onclick = (e) => { if(selectionMode) { toggleItemSelection('folder:'+f); e.stopPropagation(); } }; div.innerHTML = `<div class="flex items-center gap-3 cursor-pointer" onclick="if(!selectionMode){currentPath.push('${f}'); applyFilters();}"> ${selectionMode ? `<div class="p-1">${isSelected ? '<i data-lucide="check-circle-2" class="text-blue-500 w-5 h-5"></i>' : '<i data-lucide="circle" class="text-gray-300 w-5 h-5"></i>'}</div>` : ''} <div class="bg-blue-50 p-2.5 rounded-[14px] text-blue-500"><i data-lucide="folder" class="w-6 h-6 fill-current"></i></div> <div class="flex-1 min-w-0"><div class="font-bold text-gray-800 text-[15px] truncate">${f}</div><div class="text-[10px] text-gray-400 uppercase font-black tracking-widest mt-0.5">Папка</div></div> </div> <div class="flex w-full gap-2 px-1 uppercase text-[11px] font-black text-center transition-opacity duration-200 ${hideActionButtons ? 'opacity-0 pointer-events-none' : 'opacity-100'}"> <button onclick="uiPrompt('Имя папки', '${f}', (n) => renameItem('folder', '${f}', n))" class="flex-1 bg-gray-50 text-gray-500 py-2 rounded-xl active:bg-gray-100 transition-colors">Переименовать</button> </div>`; container.appendChild(div); });
-            files.forEach(file => { const div = document.createElement('div'); const isSelected = selectedIds.has('file:'+file.id); div.className = `bg-white p-4 rounded-2xl flex flex-col gap-3 shadow-sm border border-gray-100 file-card ${isSelected ? 'selected' : ''}`; div.onclick = (e) => { if(selectionMode) { toggleItemSelection('file:'+file.id); e.stopPropagation(); } }; const fName = file.title || ""; const ext = (fName.split('.').pop() || '').toLowerCase(); const isWeblink = ext === 'weblink'; let displayTitle = fName; if (isWeblink) displayTitle = fName.replace(/\.weblink$/i, ''); const buttonsBlock = `<div class="flex w-full gap-2 px-1 uppercase text-[11px] font-black text-center transition-opacity duration-200 ${hideActionButtons ? 'opacity-0 pointer-events-none' : 'opacity-100'}">${getFileActionButtons(file, inTrash)}</div>`; const extPrefix = (!isWeblink && fName.includes('.')) ? `${ext.toUpperCase()} • ` : ''; const subTitleHTML = isWeblink ? `ССЫЛКА • ${formatDate(file.date)}` : `${extPrefix}${((file.size || 0)/1024/1024).toFixed(2)} МБ • ${formatDate(file.date)}`; div.innerHTML = `<div class="flex items-center gap-3 cursor-pointer" onclick="if(!selectionMode && document.getElementById('searchInput').value) navigateToFileFolder('${getItemPath(file).replace(/'/g, "\\'")}')"> ${selectionMode ? `<div class="p-1">${isSelected ? '<i data-lucide="check-circle-2" class="text-blue-500 w-5 h-5"></i>' : '<i data-lucide="circle" class="text-gray-300 w-5 h-5"></i>'}</div>` : ''} ${isWeblink ? `<div class="bg-indigo-50 p-2.5 rounded-[14px] text-indigo-500"><i data-lucide="link" class="w-6 h-6"></i></div>` : `<div class="bg-gray-50 p-2.5 rounded-[14px] text-gray-400"><i data-lucide="file-text" class="w-6 h-6"></i></div>`} <div class="flex-1 min-w-0"> <div class="font-bold text-gray-800 text-[15px] truncate pr-2">${displayTitle}</div> <div class="text-[10px] text-blue-500 font-bold uppercase tracking-widest mt-0.5 leading-tight opacity-90">${subTitleHTML}</div> </div> </div>${buttonsBlock}`; container.appendChild(div); });
+            folders.forEach(f => { 
+                const div = document.createElement('div'); const isSelected = selectedIds.has('folder:'+f); div.className = `bg-white p-4 rounded-2xl flex flex-col gap-3 shadow-sm border border-gray-100 file-card ${isSelected ? 'selected' : ''}`; div.onclick = (e) => { if(selectionMode) { toggleItemSelection('folder:'+f); e.stopPropagation(); } }; 
+                const safeF = escJs(f); const htmlF = escHtml(f);
+                div.innerHTML = `<div class="flex items-center gap-3 cursor-pointer" onclick="if(!selectionMode){currentPath.push('${safeF}'); applyFilters();}"> ${selectionMode ? `<div class="p-1">${isSelected ? '<i data-lucide="check-circle-2" class="text-blue-500 w-5 h-5"></i>' : '<i data-lucide="circle" class="text-gray-300 w-5 h-5"></i>'}</div>` : ''} <div class="bg-blue-50 p-2.5 rounded-[14px] text-blue-500"><i data-lucide="folder" class="w-6 h-6 fill-current"></i></div> <div class="flex-1 min-w-0"><div class="font-bold text-gray-800 text-[15px] truncate">${htmlF}</div><div class="text-[10px] text-gray-400 uppercase font-black tracking-widest mt-0.5">Папка</div></div> </div> <div class="flex w-full gap-2 px-1 uppercase text-[11px] font-black text-center transition-opacity duration-200 ${hideActionButtons ? 'opacity-0 pointer-events-none' : 'opacity-100'}"> <button onclick="uiPrompt('Имя папки', '${safeF}', (n) => renameItem('folder', '${safeF}', n))" class="flex-1 bg-gray-50 text-gray-500 py-2 rounded-xl active:bg-gray-100 transition-colors">Переименовать</button> </div>`; 
+                container.appendChild(div); 
+            });
+            files.forEach(file => { 
+                const div = document.createElement('div'); const isSelected = selectedIds.has('file:'+file.id); div.className = `bg-white p-4 rounded-2xl flex flex-col gap-3 shadow-sm border border-gray-100 file-card ${isSelected ? 'selected' : ''}`; div.onclick = (e) => { if(selectionMode) { toggleItemSelection('file:'+file.id); e.stopPropagation(); } }; 
+                const fName = file.title || ""; const ext = (fName.split('.').pop() || '').toLowerCase(); const isWeblink = ext === 'weblink'; let displayTitle = fName; if (isWeblink) displayTitle = fName.replace(/\.weblink$/i, ''); const buttonsBlock = `<div class="flex w-full gap-2 px-1 uppercase text-[11px] font-black text-center transition-opacity duration-200 ${hideActionButtons ? 'opacity-0 pointer-events-none' : 'opacity-100'}">${getFileActionButtons(file, inTrash)}</div>`; const extPrefix = (!isWeblink && fName.includes('.')) ? `${ext.toUpperCase()} • ` : ''; const subTitleHTML = isWeblink ? `ССЫЛКА • ${formatDate(file.date)}` : `${extPrefix}${((file.size || 0)/1024/1024).toFixed(2)} МБ • ${formatDate(file.date)}`; 
+                const safePath = escJs(getItemPath(file)); const displayTitleHtml = escHtml(displayTitle);
+                div.innerHTML = `<div class="flex items-center gap-3 cursor-pointer" onclick="if(!selectionMode && document.getElementById('searchInput').value) navigateToFileFolder('${safePath}')"> ${selectionMode ? `<div class="p-1">${isSelected ? '<i data-lucide="check-circle-2" class="text-blue-500 w-5 h-5"></i>' : '<i data-lucide="circle" class="text-gray-300 w-5 h-5"></i>'}</div>` : ''} ${isWeblink ? `<div class="bg-indigo-50 p-2.5 rounded-[14px] text-indigo-500"><i data-lucide="link" class="w-6 h-6"></i></div>` : `<div class="bg-gray-50 p-2.5 rounded-[14px] text-gray-400"><i data-lucide="file-text" class="w-6 h-6"></i></div>`} <div class="flex-1 min-w-0"> <div class="font-bold text-gray-800 text-[15px] truncate pr-2">${displayTitleHtml}</div> <div class="text-[10px] text-blue-500 font-bold uppercase tracking-widest mt-0.5 leading-tight opacity-90">${subTitleHTML}</div> </div> </div>${buttonsBlock}`; 
+                container.appendChild(div); 
+            });
             lucide.createIcons(); updateBottomBar();
         }
 
