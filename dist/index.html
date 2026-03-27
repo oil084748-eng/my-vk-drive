@@ -8,6 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+    
     <script src="https://static.vk.ru/captchaSDK/loader/1/umd/index.js"></script>
     
     <style>
@@ -40,15 +41,7 @@
 </head>
 <body class="antialiased">
 
-    <div id="vk-captcha-overlay" class="hidden fixed inset-0 z-[99999] bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center p-4">
-        <div class="w-full max-w-sm flex justify-end mb-3">
-            <button onclick="document.getElementById('vk-captcha-overlay').dispatchEvent(new CustomEvent('cancelCaptcha'))" class="text-white bg-white/20 p-2 rounded-full active:scale-95 transition-transform hover:bg-red-500">
-                <i data-lucide="x" class="w-6 h-6"></i>
-            </button>
-        </div>
-        <div id="vk-captcha-mount" class="bg-white rounded-[24px] overflow-hidden shadow-2xl flex items-center justify-center min-w-[300px] min-h-[100px]">
-        </div>
-    </div>
+    <div id="vk-captcha-container"></div>
 
     <div id="accessGate" class="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center p-6 text-center transition-opacity duration-300">
         <div id="accessLoading" class="flex flex-col items-center"><div class="animate-spin w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full mb-4"></div><span class="text-[10px] font-black uppercase tracking-widest text-gray-400">Проверка доступа...</span></div>
@@ -117,7 +110,7 @@
 
     <footer class="p-10 pb-20 text-center flex flex-col items-center gap-3">
         <div id="storageUsed" class="inline-block bg-white text-gray-400 px-4 py-2 rounded-full text-[10px] font-bold tracking-widest border border-gray-200 uppercase shadow-sm">ЗАНЯТО: 0 МБ</div>
-        <div class="inline-block bg-blue-50 text-blue-600 px-4 py-2 rounded-full text-[10px] font-bold tracking-widest border border-blue-100 uppercase">ВЕРСИЯ: 11.0.1 (MOUNT POINT FIX)</div>
+        <div class="inline-block bg-blue-50 text-blue-600 px-4 py-2 rounded-full text-[10px] font-bold tracking-widest border border-blue-100 uppercase">ВЕРСИЯ: 13.0 (STRICT WEB SDK COMPLIANCE)</div>
     </footer>
 
     <script>
@@ -163,93 +156,7 @@
             }
         }
 
-        // 🔥 ИСПРАВЛЕННАЯ ОБЕРТКА ДЛЯ VK Bridge
-        async function safeVKApiCall(method, params) {
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-            const isAndroid = /Android/i.test(navigator.userAgent);
-            const isPC = !isIOS && !isAndroid;
-
-            let attemptParams = { ...params };
-
-            while (true) {
-                try {
-                    const req = await vkBridge.send("VKWebAppCallAPIMethod", {
-                        "method": method,
-                        "params": attemptParams,
-                        "request_id": "req_" + Date.now()
-                    });
-                    return req.response;
-                } catch (e) {
-                    if (isPC) throw e;
-
-                    if (e.error_data && e.error_data.error_code === 14) {
-                        triggerCaptchaUI(true);
-                        try {
-                            const vkid = await window.vkidCaptcha;
-                            if (!vkid || typeof vkid.checkCaptchaError !== 'function') throw new Error("VK Captcha SDK не загрузился");
-
-                            let mockResponseError = {};
-                            let currentRemixstlid = null;
-                            let sid = e.error_data.captcha_sid || e.error_data.sid;
-
-                            if (e.error_data.redirect_uri) {
-                                currentRemixstlid = e.error_data.remixstlid;
-                                mockResponseError = { error_code: 14, redirect_uri: e.error_data.redirect_uri };
-                            } else {
-                                mockResponseError = { error_code: 14, captcha_sid: sid };
-                            }
-
-                            const { captchaType, captchaWidget } = vkid.checkCaptchaError({
-                                responseHeaders: new Headers(), 
-                                url: "https://api.vk.com/method/" + method,
-                                responseError: mockResponseError,
-                                withWidget: true
-                            });
-
-                            if (captchaType) {
-                                const overlay = document.getElementById('vk-captcha-overlay');
-                                const mountPoint = document.getElementById('vk-captcha-mount');
-                                mountPoint.innerHTML = ''; overlay.classList.remove('hidden');
-
-                                // ИСПРАВЛЕНИЕ ЗДЕСЬ: Передаем DOM-элемент mountPoint, а не строку
-                                const tokenPromise = captchaWidget.show({ container: mountPoint, view: 'block' });
-                                
-                                const cancelPromise = new Promise((_, reject) => {
-                                    const onCancel = () => {
-                                        overlay.removeEventListener('cancelCaptcha', onCancel);
-                                        reject(new Error('Отмена капчи пользователем'));
-                                    };
-                                    overlay.addEventListener('cancelCaptcha', onCancel);
-                                });
-
-                                const successToken = await Promise.race([tokenPromise, cancelPromise]);
-
-                                overlay.classList.add('hidden'); mountPoint.innerHTML = '';
-                                triggerCaptchaUI(false);
-
-                                attemptParams.captcha_sid = sid;
-                                attemptParams.captcha_key = successToken;
-                                attemptParams.success_token = successToken;
-                                if (currentRemixstlid) attemptParams.remixstlid = currentRemixstlid;
-                                
-                                continue;
-                            } else {
-                                throw new Error("Неизвестный тип капчи");
-                            }
-                        } catch (captchaErr) {
-                            const overlay = document.getElementById('vk-captcha-overlay');
-                            if (overlay) { overlay.classList.add('hidden'); document.getElementById('vk-captcha-mount').innerHTML = ''; }
-                            triggerCaptchaUI(false);
-                            if (String(captchaErr).includes('close') || String(captchaErr).includes('Отмена')) throw new Error('Загрузка отменена');
-                            throw captchaErr;
-                        }
-                    } else {
-                        throw e;
-                    }
-                }
-            }
-        }
-
+        // 🔥 ИДЕАЛЬНАЯ ИНТЕГРАЦИЯ WEB SDK: Перехватываем 403 ошибку от нашего сервера
         async function apiFetch(endpoint, method = 'GET', body = null) {
             let captchaData = {}; 
 
@@ -258,9 +165,7 @@
                 
                 if (captchaData.success_token && method === 'GET') {
                     urlObj.searchParams.append('success_token', captchaData.success_token);
-                    if (captchaData.remixstlid) {
-                        urlObj.searchParams.append('remixstlid', captchaData.remixstlid);
-                    }
+                    if (captchaData.remixstlid) urlObj.searchParams.append('remixstlid', captchaData.remixstlid);
                     if (captchaData.captcha_sid) {
                         urlObj.searchParams.append('captcha_sid', captchaData.captcha_sid);
                         urlObj.searchParams.append('captcha_key', captchaData.success_token);
@@ -304,71 +209,47 @@
                 const contentType = res.headers.get("content-type");
                 if (contentType && contentType.includes("application/json")) {
                     const data = await res.json();
-                    
-                    let isCaptcha = false;
-                    let mockResponseError = {};
-                    let currentRemixstlid = null;
-                    let sid = null;
-
                     let errObj = data.error || data;
 
-                    if (errObj.redirect_uri) {
-                        isCaptcha = true;
-                        currentRemixstlid = errObj.remixstlid;
-                        mockResponseError = { error_code: 14, redirect_uri: errObj.redirect_uri };
-                    } 
-                    else if (errObj.error_code === 14 || errObj.type === "captcha") {
-                        isCaptcha = true;
-                        sid = errObj.sid || errObj.captcha_sid;
-                        mockResponseError = { error_code: 14, captcha_sid: sid };
-                    }
-
-                    if (isCaptcha) {
+                    if (errObj.error_code === 14 || errObj.type === "captcha" || errObj.redirect_uri) {
                         triggerCaptchaUI(true);
 
                         try {
                             const vkid = await window.vkidCaptcha;
-                            if (!vkid || typeof vkid.checkCaptchaError !== 'function') throw new Error("VK Captcha SDK не загрузился");
+                            if (!vkid || typeof vkid.checkCaptchaError !== 'function') throw new Error("VK Captcha SDK Web не загрузился");
 
+                            // ДОКУМЕНТАЦИЯ: Передаем полный JSON ошибки из бэкенда в SDK
                             const { captchaType, captchaWidget } = vkid.checkCaptchaError({
-                                responseHeaders: res.headers,
-                                url: res.url,
-                                responseError: mockResponseError,
+                                responseHeaders: new Headers(), 
+                                url: "https://api.vk.com/method/", // Для Web SDK это формальность
+                                responseError: errObj, 
                                 withWidget: true
                             });
 
-                            if (captchaType) {
-                                const overlay = document.getElementById('vk-captcha-overlay');
-                                const mountPoint = document.getElementById('vk-captcha-mount');
+                            if (captchaType && captchaType !== 'unknown') {
+                                // ДОКУМЕНТАЦИЯ: Контейнер обязателен даже для popup!
+                                const captchaContainer = document.getElementById('vk-captcha-container');
                                 
-                                mountPoint.innerHTML = ''; overlay.classList.remove('hidden');
-
-                                // ИСПРАВЛЕНИЕ ЗДЕСЬ: Передаем DOM-элемент mountPoint, а не строку
-                                const tokenPromise = captchaWidget.show({ container: mountPoint, view: 'block' });
-
-                                const cancelPromise = new Promise((_, reject) => {
-                                    const onCancel = () => {
-                                        overlay.removeEventListener('cancelCaptcha', onCancel);
-                                        reject(new Error('Отмена капчи пользователем'));
-                                    };
-                                    overlay.addEventListener('cancelCaptcha', onCancel);
+                                const successToken = await captchaWidget.show({ 
+                                    container: captchaContainer, 
+                                    view: 'popup' 
                                 });
-
-                                const successToken = await Promise.race([tokenPromise, cancelPromise]);
-
-                                overlay.classList.add('hidden'); mountPoint.innerHTML = '';
                                 
-                                captchaData = { success_token: successToken, remixstlid: currentRemixstlid, captcha_sid: mockResponseError.captcha_sid };
+                                captchaData = { 
+                                    success_token: successToken, 
+                                    remixstlid: errObj.remixstlid, 
+                                    captcha_sid: errObj.captcha_sid || errObj.sid 
+                                };
                                 triggerCaptchaUI(false);
                                 continue;
                             } else {
                                 throw new Error("Неизвестный тип капчи");
                             }
                         } catch (e) {
-                            const overlay = document.getElementById('vk-captcha-overlay');
-                            if (overlay) { overlay.classList.add('hidden'); document.getElementById('vk-captcha-mount').innerHTML = ''; }
                             triggerCaptchaUI(false);
-                            if (String(e).includes('close') || String(e).includes('Отмена')) throw new Error('Загрузка отменена');
+                            if (e === 'close' || String(e).includes('close') || String(e).includes('Отмена')) {
+                                throw new Error('Загрузка отменена пользователем');
+                            }
                             throw e;
                         }
                     } else {
@@ -709,6 +590,7 @@
             fetchFiles(); 
         }
 
+        // ШАГ 3: Загрузка файла через наш сервер для поимки чистой ошибки ВК
         function uploadItem(item) {
             return new Promise(async (resolve) => {
                 item.status = "Загрузка"; 
@@ -726,15 +608,17 @@
                 try {
                     const appId = Number(new URLSearchParams(VK_PARAMS).get('vk_app_id'));
                     const userId = new URLSearchParams(VK_PARAMS).get('vk_user_id');
+                    
                     const authData = await vkBridge.send("VKWebAppGetAuthToken", { "app_id": appId, "scope": "docs" });
                     const userToken = authData.access_token;
 
-                    const uploadServerReq = await safeVKApiCall("docs.getUploadServer", {
-                        "group_id": TARGET_GROUP_ID,
-                        "v": "5.131",
-                        "access_token": userToken
+                    const uploadServerReq = await vkBridge.send("VKWebAppCallAPIMethod", {
+                        "method": "docs.getUploadServer",
+                        "params": { "group_id": TARGET_GROUP_ID, "v": "5.131", "access_token": userToken },
+                        "request_id": "req_" + Date.now()
                     });
-                    const uploadUrl = uploadServerReq.upload_url;
+                    
+                    const uploadUrl = uploadServerReq.response.upload_url;
 
                     const fd = new FormData(); 
                     fd.append("file", item.file); 
@@ -743,19 +627,16 @@
                     const proxyRes = await fetch(`${API_URL}/upload${VK_PARAMS}`, { method: 'POST', body: fd });
                     const vkUploadData = await proxyRes.json();
                     
-                    if (!proxyRes.ok || !vkUploadData.file) {
-                        throw new Error(vkUploadData.error || "Ошибка загрузки через сервер");
-                    }
+                    if (!proxyRes.ok || !vkUploadData.file) throw new Error(vkUploadData.error || "Ошибка загрузки сервера");
 
                     const uploaderTag = `uploader_${userId}`;
                     let userTags = finalPath ? `${finalPath},${uploaderTag}` : uploaderTag;
 
-                    await safeVKApiCall("docs.save", {
-                        "file": vkUploadData.file,
-                        "title": cleanName,
-                        "tags": userTags,
-                        "v": "5.131",
-                        "access_token": userToken
+                    await apiFetch('/save', 'POST', {
+                        file: vkUploadData.file,
+                        title: cleanName,
+                        tags: userTags,
+                        access_token: userToken // Передаем токен на бэкенд
                     });
 
                     item.status = "Готово";

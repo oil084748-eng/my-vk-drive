@@ -24,7 +24,6 @@ async function vkApi(method, params, reqBody = {}) {
     apiParams.set("access_token", VK_TOKEN);
     apiParams.set("v", "5.131");
     
-    // Перезаписываем токен, если клиент прислал токен пользователя
     for (const key in params) {
         apiParams.set(key, params[key]); 
     }
@@ -46,8 +45,6 @@ async function vkApi(method, params, reqBody = {}) {
         
         if (res.data.error) {
             if (res.data.error.error_code === 14) {
-                console.log(`[VK API] Captcha needed for ${method}`);
-                // Отдаем чистый, нетронутый ответ ВК клиенту
                 throw { type: "captcha", ...res.data.error };
             }
             throw new Error(res.data.error.error_msg || JSON.stringify(res.data.error));
@@ -76,7 +73,6 @@ app.get("/files", async (req, res) => {
     }
 });
 
-// ШАГ 1: Прокси-загрузка файла в ВК (обход CORS)
 app.post("/upload", upload.single("file"), async (req, res) => {
     try {
         if (!req.file) throw new Error("Файл не дошел до сервера");
@@ -99,23 +95,6 @@ app.post("/upload", upload.single("file"), async (req, res) => {
         res.json({ success: true, file: uploadRes.data.file });
     } catch (e) {
         if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-        res.status(500).json({ error: e.message });
-    }
-});
-
-// ШАГ 2: Сохранение через сервер токеном пользователя (чтобы ловить правильную капчу)
-app.post("/save", async (req, res) => {
-    try {
-        const saveRes = await vkApi("docs.save", {
-            file: req.body.file,
-            title: req.body.title,
-            tags: req.body.tags,
-            access_token: req.body.access_token // ИСПОЛЬЗУЕМ ТОКЕН ЮЗЕРА
-        }, req.body);
-
-        res.json({ success: true, file: saveRes.doc || saveRes.audio_message || saveRes.graffiti || saveRes });
-    } catch (e) {
-        if (e.type === "captcha") return res.status(403).json(e);
         res.status(500).json({ error: e.message });
     }
 });
