@@ -117,7 +117,7 @@
 
     <footer class="p-10 pb-20 text-center flex flex-col items-center gap-3">
         <div id="storageUsed" class="inline-block bg-white text-gray-400 px-4 py-2 rounded-full text-[10px] font-bold tracking-widest border border-gray-200 uppercase shadow-sm">ЗАНЯТО: 0 МБ</div>
-        <div class="inline-block bg-blue-50 text-blue-600 px-4 py-2 rounded-full text-[10px] font-bold tracking-widest border border-blue-100 uppercase">ВЕРСИЯ: 9.0.0 (CLIENT-SIDE UPLOAD)</div>
+        <div class="inline-block bg-blue-50 text-blue-600 px-4 py-2 rounded-full text-[10px] font-bold tracking-widest border border-blue-100 uppercase">ВЕРСИЯ: 11.0.1 (MOUNT POINT FIX)</div>
     </footer>
 
     <script>
@@ -163,7 +163,93 @@
             }
         }
 
-        // Мы оставляем умный apiFetch для операций типа перемещения, удаления и скачивания
+        // 🔥 ИСПРАВЛЕННАЯ ОБЕРТКА ДЛЯ VK Bridge
+        async function safeVKApiCall(method, params) {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            const isAndroid = /Android/i.test(navigator.userAgent);
+            const isPC = !isIOS && !isAndroid;
+
+            let attemptParams = { ...params };
+
+            while (true) {
+                try {
+                    const req = await vkBridge.send("VKWebAppCallAPIMethod", {
+                        "method": method,
+                        "params": attemptParams,
+                        "request_id": "req_" + Date.now()
+                    });
+                    return req.response;
+                } catch (e) {
+                    if (isPC) throw e;
+
+                    if (e.error_data && e.error_data.error_code === 14) {
+                        triggerCaptchaUI(true);
+                        try {
+                            const vkid = await window.vkidCaptcha;
+                            if (!vkid || typeof vkid.checkCaptchaError !== 'function') throw new Error("VK Captcha SDK не загрузился");
+
+                            let mockResponseError = {};
+                            let currentRemixstlid = null;
+                            let sid = e.error_data.captcha_sid || e.error_data.sid;
+
+                            if (e.error_data.redirect_uri) {
+                                currentRemixstlid = e.error_data.remixstlid;
+                                mockResponseError = { error_code: 14, redirect_uri: e.error_data.redirect_uri };
+                            } else {
+                                mockResponseError = { error_code: 14, captcha_sid: sid };
+                            }
+
+                            const { captchaType, captchaWidget } = vkid.checkCaptchaError({
+                                responseHeaders: new Headers(), 
+                                url: "https://api.vk.com/method/" + method,
+                                responseError: mockResponseError,
+                                withWidget: true
+                            });
+
+                            if (captchaType) {
+                                const overlay = document.getElementById('vk-captcha-overlay');
+                                const mountPoint = document.getElementById('vk-captcha-mount');
+                                mountPoint.innerHTML = ''; overlay.classList.remove('hidden');
+
+                                // ИСПРАВЛЕНИЕ ЗДЕСЬ: Передаем DOM-элемент mountPoint, а не строку
+                                const tokenPromise = captchaWidget.show({ container: mountPoint, view: 'block' });
+                                
+                                const cancelPromise = new Promise((_, reject) => {
+                                    const onCancel = () => {
+                                        overlay.removeEventListener('cancelCaptcha', onCancel);
+                                        reject(new Error('Отмена капчи пользователем'));
+                                    };
+                                    overlay.addEventListener('cancelCaptcha', onCancel);
+                                });
+
+                                const successToken = await Promise.race([tokenPromise, cancelPromise]);
+
+                                overlay.classList.add('hidden'); mountPoint.innerHTML = '';
+                                triggerCaptchaUI(false);
+
+                                attemptParams.captcha_sid = sid;
+                                attemptParams.captcha_key = successToken;
+                                attemptParams.success_token = successToken;
+                                if (currentRemixstlid) attemptParams.remixstlid = currentRemixstlid;
+                                
+                                continue;
+                            } else {
+                                throw new Error("Неизвестный тип капчи");
+                            }
+                        } catch (captchaErr) {
+                            const overlay = document.getElementById('vk-captcha-overlay');
+                            if (overlay) { overlay.classList.add('hidden'); document.getElementById('vk-captcha-mount').innerHTML = ''; }
+                            triggerCaptchaUI(false);
+                            if (String(captchaErr).includes('close') || String(captchaErr).includes('Отмена')) throw new Error('Загрузка отменена');
+                            throw captchaErr;
+                        }
+                    } else {
+                        throw e;
+                    }
+                }
+            }
+        }
+
         async function apiFetch(endpoint, method = 'GET', body = null) {
             let captchaData = {}; 
 
@@ -257,7 +343,8 @@
                                 
                                 mountPoint.innerHTML = ''; overlay.classList.remove('hidden');
 
-                                const tokenPromise = captchaWidget.show({ container: '#vk-captcha-mount', view: 'block' });
+                                // ИСПРАВЛЕНИЕ ЗДЕСЬ: Передаем DOM-элемент mountPoint, а не строку
+                                const tokenPromise = captchaWidget.show({ container: mountPoint, view: 'block' });
 
                                 const cancelPromise = new Promise((_, reject) => {
                                     const onCancel = () => {
@@ -331,7 +418,7 @@
         
         function uiConfirm(title, desc, onAction) { 
             document.getElementById('umTitle').innerText = title; document.getElementById('umDesc').innerText = desc; document.getElementById('umDescContainer').classList.remove('hidden'); document.getElementById('umInput').classList.add('hidden'); document.getElementById('umCancelBtn').classList.remove('hidden'); 
-            const btn = document.getElementById('umConfirmBtn'); btn.innerText = 'Подтвердить'; btn.className = 'flex-1 bg-red-50 text-white py-3 rounded-xl font-bold uppercase text-xs tracking-widest'; btn.onclick = () => { onAction(); closeUM(); }; 
+            const btn = document.getElementById('umConfirmBtn'); btn.innerText = 'Подтвердить'; btn.className = 'flex-1 bg-red-500 text-white py-3 rounded-xl font-bold uppercase text-xs tracking-widest'; btn.onclick = () => { onAction(); closeUM(); }; 
             document.getElementById('universalModal').classList.remove('hidden'); 
         }
         
@@ -370,7 +457,6 @@
 
         function isItemInTrash(item) { if (!item.tags) return false; return item.tags.some(t => t.toLowerCase().trim() === '.trash' || t.toLowerCase().trim().startsWith('.trash/')); }
 
-        // 🔥 ИСПРАВЛЕНИЕ: Научили систему игнорировать теги загрузчиков при построении пути
         function getItemPath(item) {
             if (!item.tags || item.tags.length === 0) return "";
             if (item.tags.some(t => t.toLowerCase().trim() === '.trash')) { const orig = item.tags.find(t => t.toLowerCase().trim().startsWith('original_path:')); return orig ? orig.replace(/original_path:/i, '') : ""; }
@@ -379,7 +465,7 @@
                 t.toLowerCase().trim() !== '.trash' && 
                 !t.toLowerCase().trim().startsWith('original_path:') && 
                 !t.toLowerCase().trim().startsWith(LINK_PREFIX.toLowerCase()) &&
-                !t.toLowerCase().trim().startsWith('uploader_') // Игнорируем ID загрузчика как папку
+                !t.toLowerCase().trim().startsWith('uploader_')
             ) || "";
         }
 
@@ -623,7 +709,6 @@
             fetchFiles(); 
         }
 
-        // 🔥 ИСПРАВЛЕНИЕ: Новый, быстрый алгоритм загрузки от лица пользователя
         function uploadItem(item) {
             return new Promise(async (resolve) => {
                 item.status = "Загрузка"; 
@@ -639,20 +724,18 @@
                 if (item.linkUrl) finalPath = finalPath ? finalPath + "," + LINK_PREFIX + item.linkUrl : LINK_PREFIX + item.linkUrl; 
 
                 try {
-                    // 1. Получаем токен юзера и его ID
                     const appId = Number(new URLSearchParams(VK_PARAMS).get('vk_app_id'));
                     const userId = new URLSearchParams(VK_PARAMS).get('vk_user_id');
                     const authData = await vkBridge.send("VKWebAppGetAuthToken", { "app_id": appId, "scope": "docs" });
                     const userToken = authData.access_token;
 
-                    // 2. Получаем ссылку для загрузки от ВКонтакте (от лица юзера)
-                    const uploadServerReq = await vkBridge.send("VKWebAppCallAPIMethod", {
-                        "method": "docs.getUploadServer",
-                        "params": { "group_id": TARGET_GROUP_ID, "v": "5.131", "access_token": userToken }
+                    const uploadServerReq = await safeVKApiCall("docs.getUploadServer", {
+                        "group_id": TARGET_GROUP_ID,
+                        "v": "5.131",
+                        "access_token": userToken
                     });
-                    const uploadUrl = uploadServerReq.response.upload_url;
+                    const uploadUrl = uploadServerReq.upload_url;
 
-                    // 3. Отправляем файл на наш бэкенд, чтобы он перекинул его по полученной ссылке
                     const fd = new FormData(); 
                     fd.append("file", item.file); 
                     fd.append("upload_url", uploadUrl); 
@@ -664,19 +747,15 @@
                         throw new Error(vkUploadData.error || "Ошибка загрузки через сервер");
                     }
 
-                    // 4. Добавляем тег с ID пользователя и сохраняем файл
                     const uploaderTag = `uploader_${userId}`;
                     let userTags = finalPath ? `${finalPath},${uploaderTag}` : uploaderTag;
 
-                    await vkBridge.send("VKWebAppCallAPIMethod", {
-                        "method": "docs.save",
-                        "params": { 
-                            "file": vkUploadData.file, 
-                            "title": cleanName, 
-                            "tags": userTags,
-                            "v": "5.131", 
-                            "access_token": userToken 
-                        }
+                    await safeVKApiCall("docs.save", {
+                        "file": vkUploadData.file,
+                        "title": cleanName,
+                        "tags": userTags,
+                        "v": "5.131",
+                        "access_token": userToken
                     });
 
                     item.status = "Готово";
