@@ -20,9 +20,8 @@ const GROUP_ID = "236017708";
 const upload = multer({ dest: "uploads/" });
 
 /**
- * 🔥 ГЛАВНОЕ ИСПРАВЛЕНИЕ:
- * Все запросы к ВК теперь идут строго через POST. 
- * Токены SmartCaptcha слишком длинные для GET-запросов и ломали API.
+ * 🔥 УМНЫЙ API КЛИЕНТ ДЛЯ СЕРВЕРА
+ * Поддерживает как старую капчу, так и новую SmartCaptcha (Server-to-Server).
  */
 async function vkApi(method, params, reqBody = {}) {
     const apiParams = new URLSearchParams();
@@ -33,12 +32,18 @@ async function vkApi(method, params, reqBody = {}) {
         apiParams.append(key, params[key]);
     }
 
-    // Достаем капчу из тела запроса (req.body)
+    // Старые параметры (на случай если ВК откатится к капче-картинке)
     const captcha_sid = reqBody.captcha_sid || params.captcha_sid;
     const captcha_key = reqBody.captcha_key || params.captcha_key;
 
+    // НОВЫЕ параметры SmartCaptcha (Server-to-Server)
+    const success_token = reqBody.success_token || params.success_token;
+    const remixstlid = reqBody.remixstlid || params.remixstlid;
+
     if (captcha_sid) apiParams.append("captcha_sid", captcha_sid);
     if (captcha_key) apiParams.append("captcha_key", captcha_key);
+    if (success_token) apiParams.append("success_token", success_token);
+    if (remixstlid) apiParams.append("remixstlid", remixstlid);
 
     try {
         const res = await axios.post(`https://api.vk.com/method/${method}`, apiParams, {
@@ -48,9 +53,17 @@ async function vkApi(method, params, reqBody = {}) {
         if (res.data.error) {
             if (res.data.error.error_code === 14) {
                 console.log(`[VK API] ВК запросил SmartCaptcha для метода ${method}`);
-                throw { type: "captcha", sid: res.data.error.captcha_sid };
+                // Передаем на фронтенд ВСЕ данные от новой капчи строго по документации
+                throw { 
+                    type: "captcha", 
+                    error_code: 14,
+                    sid: res.data.error.captcha_sid,
+                    captcha_sid: res.data.error.captcha_sid,
+                    redirect_uri: res.data.error.redirect_uri,
+                    remixstlid: res.data.error.remixstlid
+                };
             }
-            throw new Error(res.data.error.error_msg);
+            throw new Error(res.data.error.error_msg || JSON.stringify(res.data.error));
         }
         return res.data.response;
     } catch (e) {
@@ -76,19 +89,23 @@ app.get("/files", async (req, res) => {
     }
 });
 
+/**
+ * 🔥 НОВЫЙ АЛГОРИТМ ЗАГРУЗКИ
+ * Сервер больше не обращается к API ВКонтакте. Он просто берет файл и 
+ * пересылает его по ссылке (upload_url), которую дал ему клиент.
+ */
 app.post("/upload", upload.single("file"), async (req, res) => {
     try {
         if (!req.file) throw new Error("Файл не дошел до сервера");
         
-        const realFileName = req.body.original_name || req.file.originalname;
-        
-        // Получаем сервер загрузки (капча здесь бывает крайне редко)
-        const uploadServer = await vkApi("docs.getUploadServer", { group_id: Math.abs(GROUP_ID) });
+        const uploadUrl = req.body.upload_url;
+        if (!uploadUrl) throw new Error("Клиент не передал upload_url");
         
         const form = new FormData();
         form.append("file", fs.createReadStream(req.file.path), { filename: "file" + path.extname(req.file.originalname) });
         
-        const uploadRes = await axios.post(uploadServer.upload_url, form, { 
+        // Просто пересылаем файл на сервер ВКонтакте по клиентской ссылке
+        const uploadRes = await axios.post(uploadUrl, form, { 
             headers: form.getHeaders(),
             maxBodyLength: Infinity,
             maxContentLength: Infinity
@@ -96,20 +113,13 @@ app.post("/upload", upload.single("file"), async (req, res) => {
         
         if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
 
-        if (!uploadRes.data || !uploadRes.data.file) throw new Error("ВК отклонил файл");
+        if (!uploadRes.data || !uploadRes.data.file) throw new Error("ВК отклонил файл. Проверьте формат или размер.");
 
-        // Сохраняем файл в ВК (99% случаев капча вылетает ИМЕННО ЗДЕСЬ)
-        // Мы прокидываем req.body, чтобы токен капчи попал именно в этот запрос!
-        const saveRes = await vkApi("docs.save", { 
-            file: uploadRes.data.file, 
-            title: realFileName, 
-            tags: req.body.folder_path || "" 
-        }, req.body);
-
-        res.json({ success: true, file: saveRes.doc });
+        // Возвращаем сырые данные загрузки обратно на телефон клиента (он сам вызовет docs.save)
+        res.json({ success: true, file: uploadRes.data.file });
     } catch (e) {
         if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-        if (e.type === "captcha") return res.status(403).json(e);
+        // Так как мы больше не вызываем методы API ВК в этом роуте, капчи тут не будет
         res.status(500).json({ error: e.message });
     }
 });
@@ -145,4 +155,4 @@ app.get("/download-proxy", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 API Server with POST verification running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 API Server with Client-Side Upload Support running on port ${PORT}`));

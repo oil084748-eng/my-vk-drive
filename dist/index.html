@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+    <script src="https://static.vk.ru/captchaSDK/loader/1/umd/index.js"></script>
+    
     <style>
         :root {
             --bg-main: #f1f4f8; --text-main: #1e252c;
@@ -38,6 +40,16 @@
 </head>
 <body class="antialiased">
 
+    <div id="vk-captcha-overlay" class="hidden fixed inset-0 z-[99999] bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center p-4">
+        <div class="w-full max-w-sm flex justify-end mb-3">
+            <button onclick="document.getElementById('vk-captcha-overlay').dispatchEvent(new CustomEvent('cancelCaptcha'))" class="text-white bg-white/20 p-2 rounded-full active:scale-95 transition-transform hover:bg-red-500">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+        <div id="vk-captcha-mount" class="bg-white rounded-[24px] overflow-hidden shadow-2xl flex items-center justify-center min-w-[300px] min-h-[100px]">
+        </div>
+    </div>
+
     <div id="accessGate" class="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center p-6 text-center transition-opacity duration-300">
         <div id="accessLoading" class="flex flex-col items-center"><div class="animate-spin w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full mb-4"></div><span class="text-[10px] font-black uppercase tracking-widest text-gray-400">Проверка доступа...</span></div>
         <div id="accessDenied" class="hidden flex flex-col items-center w-full max-w-xs">
@@ -46,29 +58,6 @@
             <div class="bg-gray-50 p-5 rounded-2xl mb-8 border border-gray-100"><p class="text-gray-600 text-sm leading-relaxed font-medium">Этот Диск является приватным.</p></div>
             <button onclick="joinTargetGroup()" class="bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold uppercase tracking-widest text-xs shadow-xl w-full mb-4">Подать заявку</button>
             <button onclick="checkGroupAccess()" class="text-blue-500 font-bold uppercase tracking-widest text-[10px] py-4 w-full bg-blue-50 rounded-xl">Обновить доступ</button>
-        </div>
-    </div>
-
-    <div id="captchaModal" class="hidden fixed inset-0 flex items-center justify-center p-6 z-[4000] backdrop-blur-sm bg-black/40">
-        <div class="bg-white rounded-3xl p-7 max-w-sm w-full text-center shadow-2xl">
-            <h3 class="text-xl font-bold mb-4 text-gray-800">Проверка безопасности</h3>
-            <div class="bg-blue-50 p-4 rounded-xl mb-4 text-sm text-blue-800 text-left leading-relaxed">
-                ВКонтакте просит подтвердить, что вы не робот:<br><br>
-                <b>1.</b> Нажмите кнопку ниже.<br>
-                <b>2.</b> Поставьте галочку в новом окне.<br>
-                <b>3.</b> Вернитесь сюда и нажмите «Готово».
-            </div>
-            
-            <button onclick="openCaptchaUrl()" class="w-full bg-gray-100 text-gray-700 py-4 rounded-2xl font-bold mb-4 border border-gray-200 active:scale-95 transition-transform flex items-center justify-center gap-2">
-                <i data-lucide="external-link" class="w-4 h-4"></i> Открыть проверку
-            </button>
-            
-            <input type="text" id="captchaInput" class="w-full p-4 bg-gray-50 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 mb-4 font-bold text-center text-xs uppercase" placeholder="КОД (ЕСЛИ БЫЛ ТЕКСТ)">
-            
-            <div class="flex gap-2">
-                <button onclick="closeCaptcha(false)" class="flex-1 py-4 font-bold bg-gray-50 text-gray-500 rounded-2xl active:scale-95 transition-transform text-xs uppercase tracking-widest">Отмена</button>
-                <button onclick="submitCaptcha()" class="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-bold uppercase tracking-widest text-xs shadow-lg active:scale-95 transition-transform">Готово</button>
-            </div>
         </div>
     </div>
 
@@ -105,9 +94,7 @@
         <div id="trashPanel" class="hidden px-5 py-2 bg-red-50 border-y border-red-100"><button onclick="uiConfirm('Очистить корзину?', 'Удалить всё навсегда из ВК?', () => emptyTrash())" class="w-full bg-red-500 text-white py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest shadow-sm active:scale-[0.98]">Очистить корзину</button></div>
         <div class="px-5 py-2 flex items-center justify-between gap-4 bg-white border-b border-gray-50 text-[10px] font-black text-gray-400 uppercase tracking-tighter">
             <div id="breadcrumb" class="flex items-center overflow-x-auto whitespace-nowrap scrollbar-hide"></div>
-            <div class="flex items-center gap-3">
-                <select id="sortSelect" onchange="applyFilters()" class="font-bold bg-gray-50 px-2 py-1 rounded-lg border-none outline-none text-blue-600"><option value="date_desc">Новые</option><option value="date_asc">Старые</option><option value="name_asc">Имя</option><option value="type_asc">Тип файла</option></select>
-            </div>
+            <select id="sortSelect" onchange="applyFilters()" class="font-bold bg-gray-50 px-2 py-1 rounded-lg border-none outline-none text-blue-600"><option value="date_desc">Новые</option><option value="date_asc">Старые</option><option value="name_asc">Имя</option><option value="type_asc">Тип файла</option></select>
         </div>
     </div>
 
@@ -130,7 +117,7 @@
 
     <footer class="p-10 pb-20 text-center flex flex-col items-center gap-3">
         <div id="storageUsed" class="inline-block bg-white text-gray-400 px-4 py-2 rounded-full text-[10px] font-bold tracking-widest border border-gray-200 uppercase shadow-sm">ЗАНЯТО: 0 МБ</div>
-        <div class="inline-block bg-blue-50 text-blue-600 px-4 py-2 rounded-full text-[10px] font-bold tracking-widest border border-blue-100 uppercase">ВЕРСИЯ: 4.1.0 (RE-DIRECT HACK)</div>
+        <div class="inline-block bg-blue-50 text-blue-600 px-4 py-2 rounded-full text-[10px] font-bold tracking-widest border border-blue-100 uppercase">ВЕРСИЯ: 9.0.0 (CLIENT-SIDE UPLOAD)</div>
     </footer>
 
     <script>
@@ -145,7 +132,6 @@
         let isProcessing = false; 
         let clipboard = null;
         let searchTimeout = null; 
-        let activeCaptcha = null;
         let selectionMode = false; 
         let selectedIds = new Set();
         let currentVisibleItems = { folders: [], files: [] };
@@ -153,7 +139,6 @@
 
         let uploadBatchTotal = 0;
         let uploadBatchCurrent = 0;
-        let currentCaptchaUrl = "";
 
         function escHtml(s) { return String(s || "").replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
         function escJs(s) { return String(s || "").replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n').replace(/\r/g, '\\r'); }
@@ -165,38 +150,146 @@
             if (isActionActive || isProcessing) { e.preventDefault(); e.returnValue = 'Процесс ещё не завершен'; } 
         });
 
+        function triggerCaptchaUI(show) {
+            const l = document.getElementById('actionLoader');
+            if(show) {
+                document.getElementById('actionLoaderText').innerText = "ПРОВЕРКА ВКОНТАКТЕ...";
+                l.classList.remove('hidden', 'bg-blue-600'); l.classList.add('bg-captcha-alert');
+                document.getElementById('actionSpinner').classList.add('hidden');
+                try { vkBridge.send("VKWebAppTapticNotificationOccurred", {"type": "error"}); } catch(e) {}
+            } else {
+                l.classList.add('hidden', 'bg-blue-600'); l.classList.remove('bg-captcha-alert');
+                document.getElementById('actionSpinner').classList.remove('hidden');
+            }
+        }
+
+        // Мы оставляем умный apiFetch для операций типа перемещения, удаления и скачивания
         async function apiFetch(endpoint, method = 'GET', body = null) {
-            let captchaData = {};
+            let captchaData = {}; 
+
             while (true) {
-                let url = `${API_URL}${endpoint}${VK_PARAMS}`;
-                let options = { method };
+                const urlObj = new URL(`${API_URL}${endpoint}${VK_PARAMS}`);
                 
-                if (method === 'POST') {
-                    options.headers = { 'Content-Type': 'application/json' };
-                    let payload = body ? { ...body } : {};
-                    if (captchaData.captcha_sid) {
-                        payload.captcha_sid = captchaData.captcha_sid;
-                        payload.captcha_key = captchaData.captcha_key;
+                if (captchaData.success_token && method === 'GET') {
+                    urlObj.searchParams.append('success_token', captchaData.success_token);
+                    if (captchaData.remixstlid) {
+                        urlObj.searchParams.append('remixstlid', captchaData.remixstlid);
                     }
-                    options.body = JSON.stringify(payload);
-                } else {
-                    if (captchaData.captcha_sid) url += `&captcha_sid=${captchaData.captcha_sid}&captcha_key=${encodeURIComponent(captchaData.captcha_key)}`;
+                    if (captchaData.captcha_sid) {
+                        urlObj.searchParams.append('captcha_sid', captchaData.captcha_sid);
+                        urlObj.searchParams.append('captcha_key', captchaData.success_token);
+                    }
                 }
 
-                const res = await fetch(url, options);
-                if (res.ok) return await res.json();
-                
-                if (res.status === 403) {
-                    const data = await res.json();
-                    if (data.type === "captcha") {
-                        triggerCaptchaUI("НУЖНА ПРОВЕРКА!");
-                        const solved = await showCaptchaModal(data.sid, data.img);
-                        resetCaptchaUI();
-                        captchaData = { captcha_sid: solved.captcha_sid, captcha_key: solved.captcha_key };
-                        continue; 
+                let options = { method, headers: {} };
+
+                if (method === 'POST') {
+                    if (body instanceof FormData) {
+                        if (captchaData.success_token) {
+                            body.delete('success_token'); body.delete('remixstlid');
+                            body.delete('captcha_sid'); body.delete('captcha_key');
+                            body.append('success_token', captchaData.success_token);
+                            if (captchaData.remixstlid) body.append('remixstlid', captchaData.remixstlid);
+                            if (captchaData.captcha_sid) {
+                                body.append('captcha_sid', captchaData.captcha_sid);
+                                body.append('captcha_key', captchaData.success_token);
+                            }
+                        }
+                        options.body = body;
+                    } else {
+                        options.headers['Content-Type'] = 'application/json';
+                        let payload = body ? { ...body } : {};
+                        if (captchaData.success_token) {
+                            payload.success_token = captchaData.success_token;
+                            if (captchaData.remixstlid) payload.remixstlid = captchaData.remixstlid;
+                            if (captchaData.captcha_sid) {
+                                payload.captcha_sid = captchaData.captcha_sid;
+                                payload.captcha_key = captchaData.success_token;
+                            }
+                        }
+                        options.body = JSON.stringify(payload);
                     }
                 }
-                throw new Error("API Error");
+
+                const res = await fetch(urlObj.toString(), options);
+
+                if (res.ok) return await res.json();
+
+                const contentType = res.headers.get("content-type");
+                if (contentType && contentType.includes("application/json")) {
+                    const data = await res.json();
+                    
+                    let isCaptcha = false;
+                    let mockResponseError = {};
+                    let currentRemixstlid = null;
+                    let sid = null;
+
+                    let errObj = data.error || data;
+
+                    if (errObj.redirect_uri) {
+                        isCaptcha = true;
+                        currentRemixstlid = errObj.remixstlid;
+                        mockResponseError = { error_code: 14, redirect_uri: errObj.redirect_uri };
+                    } 
+                    else if (errObj.error_code === 14 || errObj.type === "captcha") {
+                        isCaptcha = true;
+                        sid = errObj.sid || errObj.captcha_sid;
+                        mockResponseError = { error_code: 14, captcha_sid: sid };
+                    }
+
+                    if (isCaptcha) {
+                        triggerCaptchaUI(true);
+
+                        try {
+                            const vkid = await window.vkidCaptcha;
+                            if (!vkid || typeof vkid.checkCaptchaError !== 'function') throw new Error("VK Captcha SDK не загрузился");
+
+                            const { captchaType, captchaWidget } = vkid.checkCaptchaError({
+                                responseHeaders: res.headers,
+                                url: res.url,
+                                responseError: mockResponseError,
+                                withWidget: true
+                            });
+
+                            if (captchaType) {
+                                const overlay = document.getElementById('vk-captcha-overlay');
+                                const mountPoint = document.getElementById('vk-captcha-mount');
+                                
+                                mountPoint.innerHTML = ''; overlay.classList.remove('hidden');
+
+                                const tokenPromise = captchaWidget.show({ container: '#vk-captcha-mount', view: 'block' });
+
+                                const cancelPromise = new Promise((_, reject) => {
+                                    const onCancel = () => {
+                                        overlay.removeEventListener('cancelCaptcha', onCancel);
+                                        reject(new Error('Отмена капчи пользователем'));
+                                    };
+                                    overlay.addEventListener('cancelCaptcha', onCancel);
+                                });
+
+                                const successToken = await Promise.race([tokenPromise, cancelPromise]);
+
+                                overlay.classList.add('hidden'); mountPoint.innerHTML = '';
+                                
+                                captchaData = { success_token: successToken, remixstlid: currentRemixstlid, captcha_sid: mockResponseError.captcha_sid };
+                                triggerCaptchaUI(false);
+                                continue;
+                            } else {
+                                throw new Error("Неизвестный тип капчи");
+                            }
+                        } catch (e) {
+                            const overlay = document.getElementById('vk-captcha-overlay');
+                            if (overlay) { overlay.classList.add('hidden'); document.getElementById('vk-captcha-mount').innerHTML = ''; }
+                            triggerCaptchaUI(false);
+                            if (String(e).includes('close') || String(e).includes('Отмена')) throw new Error('Загрузка отменена');
+                            throw e;
+                        }
+                    } else {
+                        throw new Error(`API Error: ${res.status} - ${errObj.error_msg || JSON.stringify(errObj)}`);
+                    }
+                }
+
+                throw new Error(`API Error: ${res.status} ${res.statusText}`);
             }
         }
 
@@ -223,60 +316,6 @@
 
         function joinTargetGroup() { vkBridge.send("VKWebAppJoinGroup", { "group_id": TARGET_GROUP_ID }).then(() => { setTimeout(checkGroupAccess, 500); }).catch(()=>{}); }
 
-        // 🔥 МАГИЯ: Открываем ссылку НА НАШ СЕРВЕР, а он уже редиректит на капчу! ВК обманут!
-        function showCaptchaModal(sid, imgUrl) { 
-            return new Promise((resolve, reject) => { 
-                currentCaptchaUrl = imgUrl;
-                document.getElementById('captchaInput').value = '';
-                document.getElementById('captchaModal').classList.remove('hidden'); 
-                activeCaptcha = { sid, resolve, reject };
-            }); 
-        }
-
-        function openCaptchaUrl() {
-            if (!currentCaptchaUrl) return;
-            
-            // Ссылка ведет на НАШ роут /solve, ВК думает что это просто внешний сайт и открывает браузер.
-            const redirectUrl = `${API_URL}/solve?url=${encodeURIComponent(currentCaptchaUrl)}`;
-
-            // Универсальный метод открытия браузера внутри приложения ВК
-            vkBridge.send("VKWebAppOpenUrl", { "url": redirectUrl })
-                .catch(() => {
-                    // Страховка для ПК
-                    window.open(redirectUrl, '_blank');
-                });
-        }
-
-        function closeCaptcha(success) { 
-            document.getElementById('captchaModal').classList.add('hidden'); 
-            if (!success && activeCaptcha) activeCaptcha.reject(new Error("Отмена капчи"));
-            activeCaptcha = null; 
-            currentCaptchaUrl = "";
-        }
-
-        function submitCaptcha() {
-            let val = document.getElementById('captchaInput').value.trim();
-            if (!val) val = "1"; // Если просто нажали Готово
-            
-            if (!activeCaptcha) return;
-            const res = { captcha_sid: activeCaptcha.sid, captcha_key: val };
-            const resolve = activeCaptcha.resolve;
-            closeCaptcha(true);
-            resolve(res);
-        }
-
-        function triggerCaptchaUI(text) {
-            const l = document.getElementById('actionLoader');
-            if(l) { document.getElementById('actionLoaderText').innerText = text; l.classList.remove('hidden', 'bg-blue-600', 'text-white'); l.classList.add('bg-captcha-alert'); document.getElementById('actionSpinner').classList.add('hidden'); }
-            vkBridge.send("VKWebAppTapticNotificationOccurred", {"type": "error"});
-        }
-
-        function resetCaptchaUI() {
-            const l = document.getElementById('actionLoader');
-            if(l) { l.classList.add('hidden'); l.classList.remove('bg-captcha-alert'); l.classList.add('bg-blue-600', 'text-white'); document.getElementById('actionSpinner').classList.remove('hidden'); }
-        }
-
-        // --- УТИЛИТЫ И МОДАЛКИ ---
         function safeNavigate(callback) {
             if (isActionActive || isProcessing) uiConfirm('Прервать процесс?', 'Процесс ещё не завершен', () => { isActionActive = false; isProcessing = false; callback(); });
             else callback();
@@ -292,7 +331,7 @@
         
         function uiConfirm(title, desc, onAction) { 
             document.getElementById('umTitle').innerText = title; document.getElementById('umDesc').innerText = desc; document.getElementById('umDescContainer').classList.remove('hidden'); document.getElementById('umInput').classList.add('hidden'); document.getElementById('umCancelBtn').classList.remove('hidden'); 
-            const btn = document.getElementById('umConfirmBtn'); btn.innerText = 'Подтвердить'; btn.className = 'flex-1 bg-red-500 text-white py-3 rounded-xl font-bold uppercase text-xs tracking-widest'; btn.onclick = () => { onAction(); closeUM(); }; 
+            const btn = document.getElementById('umConfirmBtn'); btn.innerText = 'Подтвердить'; btn.className = 'flex-1 bg-red-50 text-white py-3 rounded-xl font-bold uppercase text-xs tracking-widest'; btn.onclick = () => { onAction(); closeUM(); }; 
             document.getElementById('universalModal').classList.remove('hidden'); 
         }
         
@@ -331,11 +370,17 @@
 
         function isItemInTrash(item) { if (!item.tags) return false; return item.tags.some(t => t.toLowerCase().trim() === '.trash' || t.toLowerCase().trim().startsWith('.trash/')); }
 
+        // 🔥 ИСПРАВЛЕНИЕ: Научили систему игнорировать теги загрузчиков при построении пути
         function getItemPath(item) {
             if (!item.tags || item.tags.length === 0) return "";
             if (item.tags.some(t => t.toLowerCase().trim() === '.trash')) { const orig = item.tags.find(t => t.toLowerCase().trim().startsWith('original_path:')); return orig ? orig.replace(/original_path:/i, '') : ""; }
             const oldTrashTag = item.tags.find(t => t.toLowerCase().trim().startsWith('.trash/')); if (oldTrashTag) return oldTrashTag.substring(7).replace(/___/g, '/');
-            return item.tags.find(t => t.toLowerCase().trim() !== '.trash' && !t.toLowerCase().trim().startsWith('original_path:') && !t.toLowerCase().trim().startsWith(LINK_PREFIX.toLowerCase())) || "";
+            return item.tags.find(t => 
+                t.toLowerCase().trim() !== '.trash' && 
+                !t.toLowerCase().trim().startsWith('original_path:') && 
+                !t.toLowerCase().trim().startsWith(LINK_PREFIX.toLowerCase()) &&
+                !t.toLowerCase().trim().startsWith('uploader_') // Игнорируем ID загрузчика как папку
+            ) || "";
         }
 
         function extractHiddenLink(item) {
@@ -424,11 +469,11 @@
         }
 
         function toggleSelectionMode() { selectionMode = !selectionMode; selectedIds.clear(); document.getElementById('multiSelectBtn').classList.toggle('text-blue-500', selectionMode); applyFilters(); }
-        function toggleItemSelection(idKey) { if (selectedIds.has(idKey)) selectedIds.delete(idKey); else selectedIds.add(idKey); vkBridge.send("VKWebAppTapticNotificationOccurred", {"type": "light"}); applyFilters(); }
+        function toggleItemSelection(idKey) { if (selectedIds.has(idKey)) selectedIds.delete(idKey); else selectedIds.add(idKey); try { vkBridge.send("VKWebAppTapticNotificationOccurred", {"type": "light"}); } catch(e){} applyFilters(); }
         function selectAll() {
             let allSelected = currentVisibleItems.folders.every(f => selectedIds.has('folder:'+f)) && currentVisibleItems.files.every(file => selectedIds.has('file:'+file.id));
             if (allSelected && (currentVisibleItems.folders.length > 0 || currentVisibleItems.files.length > 0)) { currentVisibleItems.folders.forEach(f => selectedIds.delete('folder:'+f)); currentVisibleItems.files.forEach(file => selectedIds.delete('file:'+file.id)); } else { currentVisibleItems.folders.forEach(f => selectedIds.add('folder:'+f)); currentVisibleItems.files.forEach(file => selectedIds.add('file:'+file.id)); }
-            vkBridge.send("VKWebAppTapticNotificationOccurred", {"type": "light"}); applyFilters();
+            try { vkBridge.send("VKWebAppTapticNotificationOccurred", {"type": "light"}); } catch(e){} applyFilters();
         }
 
         function updateBottomBar() {
@@ -446,7 +491,7 @@
             } else { bar.classList.add('hidden'); }
         }
 
-        async function startBulkMove() { let itemsToMove = []; selectedIds.forEach(idKey => { const [type, id] = idKey.split(':'); if(type === 'file') { const f = allItems.find(i => i.id == id); if(f) itemsToMove.push({type: 'file', data: f}); } else { itemsToMove.push({type: 'folder', data: id}); } }); clipboard = { type: 'bulk', data: itemsToMove, oldPath: currentPath.join('/') }; toggleSelectionMode(); updateBottomBar(); vkBridge.send("VKWebAppTapticNotificationOccurred", {"type": "success"}); }
+        async function startBulkMove() { let itemsToMove = []; selectedIds.forEach(idKey => { const [type, id] = idKey.split(':'); if(type === 'file') { const f = allItems.find(i => i.id == id); if(f) itemsToMove.push({type: 'file', data: f}); } else { itemsToMove.push({type: 'folder', data: id}); } }); clipboard = { type: 'bulk', data: itemsToMove, oldPath: currentPath.join('/') }; toggleSelectionMode(); updateBottomBar(); try { vkBridge.send("VKWebAppTapticNotificationOccurred", {"type": "success"}); } catch(e){} }
         function cancelMove() { clipboard = null; updateBottomBar(); applyFilters(); }
 
         async function pasteItem() {
@@ -521,7 +566,6 @@
 
         function downloadFile(u, t) { const link = document.createElement('a'); link.href = `${API_URL}/download-proxy?url=${encodeURIComponent(u)}&title=${encodeURIComponent(t)}${VK_PARAMS.replace('?', '&')}`; link.target = '_blank'; document.body.appendChild(link); link.click(); document.body.removeChild(link); }
 
-        // ================= ЗАГРУЗКА ФАЙЛОВ =================
         function createFolder(n) { 
             const clean = n.trim().replace(/,/g, ' '); 
             const isUrl = /^(https?:\/\/[^\s]+)$/i.test(clean) || /^([a-zA-Z0-9а-яА-ЯёЁ-]+\.)+[a-zA-Zа-яА-ЯёЁ]{2,}(\/[^\s]*)?$/i.test(clean); 
@@ -569,7 +613,7 @@
             while (queue.some(i => i.status === "Ожидание")) { 
                 let item = queue.find(i => i.status === "Ожидание");
                 await uploadItem(item); 
-                await new Promise(r => setTimeout(r, 1500)); 
+                await new Promise(r => setTimeout(r, 1000)); 
             } 
             
             isProcessing = false; 
@@ -579,73 +623,72 @@
             fetchFiles(); 
         }
 
+        // 🔥 ИСПРАВЛЕНИЕ: Новый, быстрый алгоритм загрузки от лица пользователя
         function uploadItem(item) {
-            return new Promise((resolve) => {
-                const doUpload = (captchaData = {}) => {
-                    item.status = "Загрузка"; 
+            return new Promise(async (resolve) => {
+                item.status = "Загрузка"; 
+                
+                const p = Math.round((item.batchIndex/uploadBatchTotal)*100); 
+                document.getElementById('progressBar').style.width = p+'%'; 
+                document.getElementById('progressPercent').innerText = p+'%'; 
+                
+                const cleanName = item.file.name.replace(/,/g, ' ');
+                document.getElementById('progressText').innerText = `${item.batchIndex} из ${uploadBatchTotal} • ${cleanName}`; 
+                
+                let finalPath = item.targetPath || ""; 
+                if (item.linkUrl) finalPath = finalPath ? finalPath + "," + LINK_PREFIX + item.linkUrl : LINK_PREFIX + item.linkUrl; 
+
+                try {
+                    // 1. Получаем токен юзера и его ID
+                    const appId = Number(new URLSearchParams(VK_PARAMS).get('vk_app_id'));
+                    const userId = new URLSearchParams(VK_PARAMS).get('vk_user_id');
+                    const authData = await vkBridge.send("VKWebAppGetAuthToken", { "app_id": appId, "scope": "docs" });
+                    const userToken = authData.access_token;
+
+                    // 2. Получаем ссылку для загрузки от ВКонтакте (от лица юзера)
+                    const uploadServerReq = await vkBridge.send("VKWebAppCallAPIMethod", {
+                        "method": "docs.getUploadServer",
+                        "params": { "group_id": TARGET_GROUP_ID, "v": "5.131", "access_token": userToken }
+                    });
+                    const uploadUrl = uploadServerReq.response.upload_url;
+
+                    // 3. Отправляем файл на наш бэкенд, чтобы он перекинул его по полученной ссылке
                     const fd = new FormData(); 
-                    
                     fd.append("file", item.file); 
-                    const cleanName = item.file.name.replace(/,/g, ' ');
-                    fd.append("original_name", cleanName); 
+                    fd.append("upload_url", uploadUrl); 
+
+                    const proxyRes = await fetch(`${API_URL}/upload${VK_PARAMS}`, { method: 'POST', body: fd });
+                    const vkUploadData = await proxyRes.json();
                     
-                    let finalPath = item.targetPath || ""; 
-                    if (item.linkUrl) finalPath = finalPath ? finalPath + "," + LINK_PREFIX + item.linkUrl : LINK_PREFIX + item.linkUrl; 
-                    fd.append("folder_path", finalPath); 
-                    
-                    if (captchaData.captcha_sid) { 
-                        fd.append("captcha_sid", captchaData.captcha_sid); 
-                        fd.append("captcha_key", captchaData.captcha_key); 
+                    if (!proxyRes.ok || !vkUploadData.file) {
+                        throw new Error(vkUploadData.error || "Ошибка загрузки через сервер");
                     }
-                    
-                    const x = new XMLHttpRequest(); 
-                    x.open("POST", `${API_URL}/upload${VK_PARAMS}`);
-                    
-                    x.upload.onprogress = (e) => { 
-                        const p = Math.round((e.loaded/e.total)*100); 
-                        document.getElementById('progressBar').style.width = p+'%'; 
-                        document.getElementById('progressPercent').innerText = p+'%'; 
-                        document.getElementById('progressText').innerText = `${item.batchIndex} из ${uploadBatchTotal} • ${cleanName}`; 
-                    };
-                    
-                    x.onload = async () => { 
-                        if (x.status === 200) { 
-                            item.status = "Готово"; 
-                            resolve(); 
-                        } else if (x.status === 403) {
-                            try { 
-                                const data = JSON.parse(x.responseText); 
-                                if (data.type === "captcha") { 
-                                    triggerCaptchaUI("НУЖНА ПРОВЕРКА!"); 
-                                    const solved = await showCaptchaModal(data.sid, data.img); 
-                                    resetCaptchaUI(); 
-                                    doUpload(solved); 
-                                    return; 
-                                } 
-                            } catch(e) {}
-                            item.status = "Ожидание"; 
-                            resolve(); 
-                        } else { 
-                            item.status = "Ожидание"; 
-                            triggerCaptchaUI("ОШИБКА СЕРВЕРА"); 
-                            setTimeout(resetCaptchaUI, 2000); 
-                            resolve(); 
-                        } 
-                    };
-                    x.onerror = () => { 
-                        item.status = "Ожидание"; 
-                        triggerCaptchaUI("СБОЙ СЕТИ!"); 
-                        setTimeout(resetCaptchaUI, 2000); 
-                        resolve(); 
-                    }; 
-                    x.send(fd);
-                };
-                doUpload();
+
+                    // 4. Добавляем тег с ID пользователя и сохраняем файл
+                    const uploaderTag = `uploader_${userId}`;
+                    let userTags = finalPath ? `${finalPath},${uploaderTag}` : uploaderTag;
+
+                    await vkBridge.send("VKWebAppCallAPIMethod", {
+                        "method": "docs.save",
+                        "params": { 
+                            "file": vkUploadData.file, 
+                            "title": cleanName, 
+                            "tags": userTags,
+                            "v": "5.131", 
+                            "access_token": userToken 
+                        }
+                    });
+
+                    item.status = "Готово";
+                } catch(e) {
+                    item.status = "Ошибка";
+                    console.error(`🚨 Ошибка загрузки файла ${cleanName}:`, e);
+                    uiAlert('Сбой загрузки', `Файл: ${cleanName}\nПричина: ${e.error_data ? e.error_data.error_msg : e.message || JSON.stringify(e)}`);
+                }
+                resolve();
             });
         }
-        // ================= КОНЕЦ БЛОКА ЗАГРУЗКИ =================
 
-        // --- ВНЕШНИЕ ССЫЛКИ И ДОКУМЕНТЫ ---
         async function handleWeblinkAction(fileUrl, title, action) {
             showActionLoader(true, "ЧТЕНИЕ...");
             try {
