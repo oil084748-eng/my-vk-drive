@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=no, viewport-fit=cover">
-    <title>Мой Диск PRO (Pastel)</title>
+    <title>Мой Диск PRO</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -16,95 +16,58 @@
             --red-main: #b96a6a; --red-soft: #f0dede;
             --gray-soft: #e8ecf2; --gray-mid: #5f6e7a;
         }
-
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: var(--bg-main); color: var(--text-main);
-            padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .bg-blue-600 { background-color: var(--blue-main) !important; }
-        .bg-blue-50  { background-color: var(--blue-soft) !important; }
-        .text-blue-600, .text-blue-500 { color: var(--blue-main) !important; }
-        .bg-green-600 { background-color: var(--green-main) !important; }
-        .bg-green-50  { background-color: var(--green-soft) !important; }
-        .text-green-600 { color: var(--green-main) !important; }
-        .bg-red-500 { background-color: var(--red-main) !important; }
-        .bg-red-50  { background-color: var(--red-soft) !important; }
-        .text-red-500 { color: var(--red-main) !important; }
-        .bg-gray-50  { background-color: var(--gray-soft) !important; }
-        .bg-gray-100 { background-color: #e0e6ed !important; }
-        .text-gray-400 { color: var(--gray-mid) !important; }
-        .text-gray-800 { color: var(--text-main) !important; }
-        .text-gray-500 { color: #26334a !important; }
-        .text-gray-600 { color: #1f2a3c !important; }
-
+        body { font-family: 'Roboto', sans-serif; background-color: var(--bg-main); color: var(--text-main); padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); -webkit-tap-highlight-color: transparent; }
+        .bg-blue-600 { background-color: var(--blue-main) !important; } .bg-blue-50 { background-color: var(--blue-soft) !important; } .text-blue-600, .text-blue-500 { color: var(--blue-main) !important; }
+        .bg-green-600 { background-color: var(--green-main) !important; } .bg-green-50 { background-color: var(--green-soft) !important; } .text-green-600 { color: var(--green-main) !important; }
+        .bg-red-500 { background-color: var(--red-main) !important; } .bg-red-50 { background-color: var(--red-soft) !important; } .text-red-500 { color: var(--red-main) !important; }
+        .bg-gray-50 { background-color: var(--gray-soft) !important; } .bg-gray-100 { background-color: #e0e6ed !important; } .text-gray-400 { color: var(--gray-mid) !important; } .text-gray-800 { color: var(--text-main) !important; }
         .btn-light { background-color: var(--gray-soft) !important; color: #26334a !important; font-weight: 600; }
         .border-gray-100 { border-color: #dfe4eb !important; }
-        .border-blue-100 { border-color: #c5dfeb !important; }
-        .border-green-100 { border-color: #c8e4d7 !important; }
-        .border-red-100 { border-color: #e6cfcf !important; }
-
         .file-card.selected { border-color: var(--blue-main); background-color: var(--blue-soft); box-shadow: 0 0 0 3px rgba(61, 126, 179, 0.15); }
-        button, .touch-target { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); font-weight: 600; }
-        button:active, .touch-target:active { transform: scale(0.95); opacity: 0.85; }
-
+        button, .touch-target { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); font-weight: 600; } button:active, .touch-target:active { transform: scale(0.95); opacity: 0.85; }
         .breadcrumb-item:not(:last-child)::after { content: '›'; margin: 0 8px; color: var(--gray-mid); font-size: 18px; }
         .touch-target { min-height: 44px; min-width: 44px; display: flex; align-items: center; justify-content: center; }
         .sticky-top-block { position: sticky; top: 0; z-index: 100; background-color: white; }
-        .animate-slide-down { animation: slideDown 0.2s ease-out; }
-        .animate-slide-bottom { animation: slideUp 0.3s ease-out; }
-        @keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .animate-slide-down { animation: slideDown 0.2s ease-out; } .animate-slide-bottom { animation: slideUp 0.3s ease-out; }
+        @keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } } @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         .file-card { will-change: transform, opacity; transition: all 0.2s; }
-        
         .bg-captcha-alert { background-color: var(--red-soft) !important; color: var(--red-main) !important; }
-        #captchaModal .modal-content { border-bottom: 8px solid var(--red-soft); }
-
-        /* --- ХАКИ ДЛЯ EXCEL/WORD НА АЙФОНЕ --- */
-        .iframe-scroll-wrapper {
-            -webkit-overflow-scrolling: touch;
-            overflow-y: auto;
-        }
-        .office-zoom-hack {
-            width: 73% !important;
-            height: 73% !important;
-            transform: scale(1.37);
-            transform-origin: top left;
-        }
+        .iframe-scroll-wrapper { -webkit-overflow-scrolling: touch; overflow-y: auto; }
+        .office-zoom-hack { width: 73% !important; height: 73% !important; transform: scale(1.37); transform-origin: top left; }
     </style>
 </head>
 <body class="antialiased">
 
     <div id="accessGate" class="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center p-6 text-center transition-opacity duration-300">
-        <div id="accessLoading" class="flex flex-col items-center">
-            <div class="animate-spin w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full mb-4"></div>
-            <span class="text-[10px] font-black uppercase tracking-widest text-gray-400">Проверка доступа...</span>
-        </div>
-
+        <div id="accessLoading" class="flex flex-col items-center"><div class="animate-spin w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full mb-4"></div><span class="text-[10px] font-black uppercase tracking-widest text-gray-400">Проверка доступа...</span></div>
         <div id="accessDenied" class="hidden flex flex-col items-center w-full max-w-xs">
-            <div class="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mb-6">
-                <i data-lucide="lock" class="text-red-500 w-12 h-12"></i>
-            </div>
+            <div class="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mb-6"><i data-lucide="lock" class="text-red-500 w-12 h-12"></i></div>
             <h2 class="text-2xl font-bold text-gray-800 mb-4">Доступ закрыт</h2>
-            <div class="bg-gray-50 p-5 rounded-2xl mb-8 border border-gray-100">
-                <p class="text-gray-600 text-sm leading-relaxed font-medium">Этот Диск является приватным.<br><br>Доступ разрешен только участникам закрытой группы. Подайте заявку и дождитесь её одобрения администратором.</p>
-            </div>
-            <button onclick="joinTargetGroup()" class="bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold uppercase tracking-widest text-xs shadow-xl shadow-blue-200 w-full active:scale-95 transition-transform mb-4">Подать заявку</button>
-            <button onclick="checkGroupAccess()" class="text-blue-500 font-bold uppercase tracking-widest text-[10px] py-4 active:scale-95 transition-transform w-full bg-blue-50 rounded-xl">Я уже участник (Обновить)</button>
+            <div class="bg-gray-50 p-5 rounded-2xl mb-8 border border-gray-100"><p class="text-gray-600 text-sm leading-relaxed font-medium">Этот Диск является приватным.</p></div>
+            <button onclick="joinTargetGroup()" class="bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold uppercase tracking-widest text-xs shadow-xl w-full mb-4">Подать заявку</button>
+            <button onclick="checkGroupAccess()" class="text-blue-500 font-bold uppercase tracking-widest text-[10px] py-4 w-full bg-blue-50 rounded-xl">Обновить доступ</button>
         </div>
     </div>
 
     <div id="captchaModal" class="hidden fixed inset-0 flex items-center justify-center p-6 z-[4000] backdrop-blur-sm bg-black/40">
-        <div class="bg-white rounded-3xl p-7 max-w-sm w-full text-center shadow-2xl modal-content">
-            <img id="captchaImg" src="" class="w-full h-24 object-cover rounded-xl mb-4 bg-gray-100 border border-gray-200" alt="Captcha">
-            <h3 class="text-xl font-bold mb-2 text-gray-800">Защита от роботов</h3>
-            <p class="text-xs text-gray-500 mb-5">ВКонтакте просит ввести код с картинки, чтобы продолжить операцию.</p>
-            <input type="text" id="captchaInput" class="w-full p-4 bg-gray-50 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 mb-4 font-bold text-center border border-gray-100 text-gray-800 tracking-widest uppercase text-lg" placeholder="ВВЕДИТЕ КОД">
+        <div class="bg-white rounded-3xl p-7 max-w-sm w-full text-center shadow-2xl">
+            <h3 class="text-xl font-bold mb-4 text-gray-800">Проверка безопасности</h3>
+            <div class="bg-blue-50 p-4 rounded-xl mb-4 text-sm text-blue-800 text-left leading-relaxed">
+                ВКонтакте просит подтвердить, что вы не робот:<br><br>
+                <b>1.</b> Нажмите кнопку ниже.<br>
+                <b>2.</b> Поставьте галочку в новом окне.<br>
+                <b>3.</b> Вернитесь сюда и нажмите «Готово».
+            </div>
+            
+            <button onclick="openCaptchaUrl()" class="w-full bg-gray-100 text-gray-700 py-4 rounded-2xl font-bold mb-4 border border-gray-200 active:scale-95 transition-transform flex items-center justify-center gap-2">
+                <i data-lucide="external-link" class="w-4 h-4"></i> Открыть проверку
+            </button>
+            
+            <input type="text" id="captchaInput" class="w-full p-4 bg-gray-50 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 mb-4 font-bold text-center text-xs uppercase" placeholder="КОД (ЕСЛИ БЫЛ ТЕКСТ)">
+            
             <div class="flex gap-2">
                 <button onclick="closeCaptcha(false)" class="flex-1 py-4 font-bold bg-gray-50 text-gray-500 rounded-2xl active:scale-95 transition-transform text-xs uppercase tracking-widest">Отмена</button>
-                <button onclick="submitCaptcha()" class="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-bold uppercase tracking-widest text-xs shadow-lg shadow-blue-200 active:scale-95 transition-transform">Готово</button>
+                <button onclick="submitCaptcha()" class="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-bold uppercase tracking-widest text-xs shadow-lg active:scale-95 transition-transform">Готово</button>
             </div>
         </div>
     </div>
@@ -112,41 +75,24 @@
     <div id="universalModal" class="hidden fixed inset-0 flex items-center justify-center p-6 z-[3000] backdrop-blur-sm bg-black/40">
         <div class="bg-white rounded-[2rem] p-6 w-full max-w-sm shadow-2xl text-center">
             <h3 id="umTitle" class="text-lg font-bold mb-4 text-gray-800">Информация</h3>
-            <div id="umDescContainer" class="max-h-60 overflow-y-auto mb-6 bg-gray-50 p-4 rounded-2xl border border-gray-100 hidden">
-                <p id="umDesc" class="text-sm text-gray-600 text-left break-all select-text font-medium whitespace-pre-wrap"></p>
-            </div>
+            <div id="umDescContainer" class="max-h-60 overflow-y-auto mb-6 bg-gray-50 p-4 rounded-2xl border border-gray-100 hidden"><p id="umDesc" class="text-sm text-gray-600 text-left break-all select-text font-medium whitespace-pre-wrap"></p></div>
             <input type="text" id="umInput" class="w-full p-4 bg-gray-50 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 mb-6 font-medium text-center border-none text-gray-800 hidden">
-            <div class="flex gap-3">
-                <button id="umCancelBtn" onclick="closeUM()" class="flex-1 py-3 font-bold btn-light rounded-xl hidden">Отмена</button>
-                <button id="umConfirmBtn" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold uppercase text-xs tracking-widest">ОК</button>
-            </div>
+            <div class="flex gap-3"><button id="umCancelBtn" onclick="closeUM()" class="flex-1 py-3 font-bold btn-light rounded-xl hidden">Отмена</button><button id="umConfirmBtn" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold uppercase text-xs tracking-widest">ОК</button></div>
         </div>
     </div>
 
     <div id="docModal" class="hidden fixed inset-0 z-[5000] bg-black/90 flex flex-col backdrop-blur-sm animate-slide-bottom">
         <div class="flex justify-between items-center p-4 border-b border-gray-800 bg-black/50">
             <span id="docTitle" class="text-white font-bold text-sm truncate pr-4">Просмотр</span>
-            <div class="flex items-center gap-2">
-                <a id="docExternalLink" href="#" target="_blank" class="hidden text-gray-400 hover:text-white bg-gray-800 p-2 rounded-full active:scale-95 transition-transform"><i data-lucide="external-link" class="w-5 h-5"></i></a>
-                <button onclick="closeDocModal()" class="text-gray-400 hover:text-white bg-gray-800 p-2 rounded-full active:scale-95 transition-transform"><i data-lucide="x" class="w-5 h-5"></i></button>
-            </div>
+            <div class="flex items-center gap-2"><a id="docExternalLink" href="#" target="_blank" class="hidden text-gray-400 hover:text-white bg-gray-800 p-2 rounded-full active:scale-95 transition-transform"><i data-lucide="external-link" class="w-5 h-5"></i></a><button onclick="closeDocModal()" class="text-gray-400 hover:text-white bg-gray-800 p-2 rounded-full active:scale-95 transition-transform"><i data-lucide="x" class="w-5 h-5"></i></button></div>
         </div>
-        <div class="iframe-scroll-wrapper flex-1 w-full relative bg-gray-100 flex items-center justify-center">
-            <iframe id="docIframe" class="w-full h-full border-none"></iframe>
-            <video id="docVideo" class="hidden w-full max-h-full outline-none" controls playsinline preload="metadata"></video>
-        </div>
+        <div class="iframe-scroll-wrapper flex-1 w-full relative bg-gray-100 flex items-center justify-center"><iframe id="docIframe" class="w-full h-full border-none"></iframe><video id="docVideo" class="hidden w-full max-h-full outline-none" controls playsinline preload="metadata"></video></div>
     </div>
 
     <div class="sticky-top-block shadow-md">
-        <div id="actionLoader" class="hidden bg-blue-600 text-white px-5 py-2.5 flex items-center justify-center animate-slide-down">
-            <div id="actionSpinner" class="animate-spin w-3 h-3 border-2 border-white border-t-transparent rounded-full mr-3"></div>
-            <span id="actionLoaderText" class="text-[10px] font-black uppercase tracking-widest">Синхронизация...</span>
-        </div>
+        <div id="actionLoader" class="hidden bg-blue-600 text-white px-5 py-2.5 flex items-center justify-center animate-slide-down"><div id="actionSpinner" class="animate-spin w-3 h-3 border-2 border-white border-t-transparent rounded-full mr-3"></div><span id="actionLoaderText" class="text-[10px] font-black uppercase tracking-widest">Синхронизация...</span></div>
         <nav class="px-4 py-2 flex items-center justify-between gap-2">
-            <div class="flex flex-col items-center cursor-pointer min-w-max" onclick="safeNavigate(() => goToRoot())">
-                <div class="text-blue-500 mb-0.5"><i data-lucide="cloud" class="w-6 h-6"></i></div>
-                <span class="text-[8px] font-black uppercase tracking-tighter text-gray-400 leading-none">Мой Диск</span>
-            </div>
+            <div class="flex flex-col items-center cursor-pointer min-w-max" onclick="safeNavigate(() => goToRoot())"><div class="text-blue-500 mb-0.5"><i data-lucide="cloud" class="w-6 h-6"></i></div><span class="text-[8px] font-black uppercase tracking-tighter text-gray-400 leading-none">Мой Диск</span></div>
             <div class="flex items-center gap-0.5">
                 <button onclick="safeNavigate(() => goToTrash())" class="touch-target text-gray-300 hover:text-red-400"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
                 <button id="multiSelectBtn" onclick="toggleSelectionMode()" class="touch-target text-gray-400"><i data-lucide="more-vertical" class="w-5 h-5"></i></button>
@@ -156,26 +102,16 @@
                 <input type="file" id="fileInput" class="hidden" multiple onchange="handleFiles(this.files)">
             </div>
         </nav>
-        <div id="trashPanel" class="hidden px-5 py-2 bg-red-50 border-y border-red-100">
-            <button onclick="uiConfirm('Очистить корзину?', 'Удалить всё навсегда из ВК?', () => emptyTrash())" class="w-full bg-red-500 text-white py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest shadow-sm active:scale-[0.98]">Очистить корзину</button>
-        </div>
+        <div id="trashPanel" class="hidden px-5 py-2 bg-red-50 border-y border-red-100"><button onclick="uiConfirm('Очистить корзину?', 'Удалить всё навсегда из ВК?', () => emptyTrash())" class="w-full bg-red-500 text-white py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest shadow-sm active:scale-[0.98]">Очистить корзину</button></div>
         <div class="px-5 py-2 flex items-center justify-between gap-4 bg-white border-b border-gray-50 text-[10px] font-black text-gray-400 uppercase tracking-tighter">
             <div id="breadcrumb" class="flex items-center overflow-x-auto whitespace-nowrap scrollbar-hide"></div>
             <div class="flex items-center gap-3">
-                <span id="storageUsed" class="bg-gray-100 px-2.5 py-1 rounded-lg text-gray-500 font-bold whitespace-nowrap">0 МБ</span>
-                <select id="sortSelect" onchange="applyFilters()" class="font-bold bg-gray-50 px-2 py-1 rounded-lg border-none outline-none text-blue-600">
-                    <option value="date_desc">Новые</option>
-                    <option value="date_asc">Старые</option>
-                    <option value="name_asc">Имя</option>
-                    <option value="type_asc">Тип файла</option>
-                </select>
+                <select id="sortSelect" onchange="applyFilters()" class="font-bold bg-gray-50 px-2 py-1 rounded-lg border-none outline-none text-blue-600"><option value="date_desc">Новые</option><option value="date_asc">Старые</option><option value="name_asc">Имя</option><option value="type_asc">Тип файла</option></select>
             </div>
         </div>
     </div>
 
-    <div id="bottomBar" class="hidden fixed bottom-0 left-0 right-0 bg-white border-t border-blue-100 pt-3 pb-4 px-5 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] z-[2000] animate-slide-bottom">
-        <div class="max-w-4xl mx-auto px-5" id="bottomBarInner"></div>
-    </div>
+    <div id="bottomBar" class="hidden fixed bottom-0 left-0 right-0 bg-white border-t border-blue-100 pt-3 pb-4 px-5 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] z-[2000] animate-slide-bottom"><div class="max-w-4xl mx-auto px-5" id="bottomBarInner"></div></div>
 
     <div id="progressContainer" class="hidden fixed bottom-10 left-5 right-5 bg-white shadow-2xl rounded-2xl p-5 border border-blue-50 z-[100] animate-slide-down">
         <div class="w-full flex flex-col gap-2 mb-3">
@@ -183,24 +119,18 @@
                 <span id="progressText" class="text-[11px] font-black text-gray-400 uppercase flex-1 truncate mr-4">Загрузка...</span>
                 <span id="progressPercent" class="text-xs font-black text-blue-600">0%</span>
             </div>
-            <div class="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
-                <div id="progressBar" class="bg-blue-600 h-full w-0 transition-all duration-300"></div>
-            </div>
+            <div class="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden"><div id="progressBar" class="bg-blue-600 h-full w-0 transition-all duration-300"></div></div>
         </div>
     </div>
 
     <main class="p-5 max-w-4xl mx-auto min-h-[60vh] pb-32">
-        <div class="px-1 mb-6">
-            <div class="relative">
-                <i data-lucide="search" class="absolute left-4 top-3 text-gray-400 w-4 h-4"></i>
-                <input type="text" id="searchInput" oninput="debounceSearch()" placeholder="Поиск файлов..." class="w-full pl-11 pr-4 py-3 bg-gray-50 rounded-xl outline-none text-sm border-none shadow-inner">
-            </div>
-        </div>
+        <div class="px-1 mb-6"><div class="relative"><i data-lucide="search" class="absolute left-4 top-3 text-gray-400 w-4 h-4"></i><input type="text" id="searchInput" oninput="debounceSearch()" placeholder="Поиск файлов..." class="w-full pl-11 pr-4 py-3 bg-gray-50 rounded-xl outline-none text-sm border-none shadow-inner"></div></div>
         <div id="fileContainer" class="space-y-3"></div>
     </main>
 
-    <footer class="p-10 text-center">
-        <div class="inline-block bg-blue-50 text-blue-600 px-4 py-2 rounded-full text-[10px] font-bold tracking-widest border border-blue-100 uppercase">ВЕРСИЯ: 2.8.5 (FULL STABLE)</div>
+    <footer class="p-10 pb-20 text-center flex flex-col items-center gap-3">
+        <div id="storageUsed" class="inline-block bg-white text-gray-400 px-4 py-2 rounded-full text-[10px] font-bold tracking-widest border border-gray-200 uppercase shadow-sm">ЗАНЯТО: 0 МБ</div>
+        <div class="inline-block bg-blue-50 text-blue-600 px-4 py-2 rounded-full text-[10px] font-bold tracking-widest border border-blue-100 uppercase">ВЕРСИЯ: 4.1.0 (RE-DIRECT HACK)</div>
     </footer>
 
     <script>
@@ -221,33 +151,20 @@
         let currentVisibleItems = { folders: [], files: [] };
         let isActionActive = false;
 
-        // Переменные для счетчика (1 из 25)
         let uploadBatchTotal = 0;
         let uploadBatchCurrent = 0;
+        let currentCaptchaUrl = "";
 
-        // ФУНКЦИИ БЕЗОПАСНОСТИ (ОТ КАВЫЧЕК И XSS)
-        function escHtml(s) { 
-            return String(s || "").replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); 
-        }
-        function escJs(s) { 
-            return String(s || "").replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n').replace(/\r/g, '\\r'); 
-        }
+        function escHtml(s) { return String(s || "").replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+        function escJs(s) { return String(s || "").replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n').replace(/\r/g, '\\r'); }
 
         vkBridge.send("VKWebAppInit");
-        
-        window.onload = () => { 
-            lucide.createIcons(); 
-            checkGroupAccess(); 
-        };
+        window.onload = () => { lucide.createIcons(); checkGroupAccess(); };
 
         window.addEventListener('beforeunload', (e) => { 
-            if (isActionActive || isProcessing) { 
-                e.preventDefault(); 
-                e.returnValue = 'Процесс ещё не завершен'; 
-            } 
+            if (isActionActive || isProcessing) { e.preventDefault(); e.returnValue = 'Процесс ещё не завершен'; } 
         });
 
-        // --- УМНЫЙ API КЛИЕНТ ---
         async function apiFetch(endpoint, method = 'GET', body = null) {
             let captchaData = {};
             while (true) {
@@ -263,9 +180,7 @@
                     }
                     options.body = JSON.stringify(payload);
                 } else {
-                    if (captchaData.captcha_sid) {
-                        url += `&captcha_sid=${captchaData.captcha_sid}&captcha_key=${encodeURIComponent(captchaData.captcha_key)}`;
-                    }
+                    if (captchaData.captcha_sid) url += `&captcha_sid=${captchaData.captcha_sid}&captcha_key=${encodeURIComponent(captchaData.captcha_key)}`;
                 }
 
                 const res = await fetch(url, options);
@@ -274,9 +189,10 @@
                 if (res.status === 403) {
                     const data = await res.json();
                     if (data.type === "captcha") {
-                        triggerCaptchaUI("ВВЕДИТЕ КОД!");
-                        captchaData = await showCaptchaModal(data.sid, data.img);
+                        triggerCaptchaUI("НУЖНА ПРОВЕРКА!");
+                        const solved = await showCaptchaModal(data.sid, data.img);
                         resetCaptchaUI();
+                        captchaData = { captcha_sid: solved.captcha_sid, captcha_key: solved.captcha_key };
                         continue; 
                     }
                 }
@@ -284,26 +200,13 @@
             }
         }
 
-        // --- ОХРАНА (GATEKEEPER) ---
         async function checkGroupAccess() {
-            document.getElementById('accessLoading').classList.remove('hidden');
-            document.getElementById('accessDenied').classList.add('hidden');
-            
+            document.getElementById('accessLoading').classList.remove('hidden'); document.getElementById('accessDenied').classList.add('hidden');
             try {
                 const appId = Number(new URLSearchParams(VK_PARAMS).get('vk_app_id'));
                 if (!appId) throw new Error("No App ID found");
-
                 const authData = await vkBridge.send("VKWebAppGetAuthToken", { "app_id": appId, "scope": "" });
-                
-                const memberCheck = await vkBridge.send("VKWebAppCallAPIMethod", {
-                    "method": "groups.isMember",
-                    "request_id": "gatekeeper",
-                    "params": {
-                        "group_id": TARGET_GROUP_ID,
-                        "v": "5.131",
-                        "access_token": authData.access_token
-                    }
-                });
+                const memberCheck = await vkBridge.send("VKWebAppCallAPIMethod", { "method": "groups.isMember", "request_id": "gatekeeper", "params": { "group_id": TARGET_GROUP_ID, "v": "5.131", "access_token": authData.access_token } });
 
                 if (memberCheck.response === 1) {
                     const gate = document.getElementById('accessGate');
@@ -311,52 +214,51 @@
                     setTimeout(() => gate.classList.add('hidden'), 300);
                     fetchFiles(); 
                 } else {
-                    document.getElementById('accessLoading').classList.add('hidden');
-                    document.getElementById('accessDenied').classList.remove('hidden');
-                    lucide.createIcons();
+                    document.getElementById('accessLoading').classList.add('hidden'); document.getElementById('accessDenied').classList.remove('hidden'); lucide.createIcons();
                 }
             } catch (err) {
-                console.error("Gatekeeper error:", err);
-                document.getElementById('accessLoading').classList.add('hidden');
-                document.getElementById('accessDenied').classList.remove('hidden');
-                lucide.createIcons();
+                document.getElementById('accessLoading').classList.add('hidden'); document.getElementById('accessDenied').classList.remove('hidden'); lucide.createIcons();
             }
         }
 
-        function joinTargetGroup() {
-            vkBridge.send("VKWebAppJoinGroup", { "group_id": TARGET_GROUP_ID })
-                .then(() => {
-                    setTimeout(checkGroupAccess, 500);
-                })
-                .catch(err => console.log("Отмена заявки", err));
-        }
+        function joinTargetGroup() { vkBridge.send("VKWebAppJoinGroup", { "group_id": TARGET_GROUP_ID }).then(() => { setTimeout(checkGroupAccess, 500); }).catch(()=>{}); }
 
-        // --- ИНТЕРФЕЙС КАПЧИ ---
+        // 🔥 МАГИЯ: Открываем ссылку НА НАШ СЕРВЕР, а он уже редиректит на капчу! ВК обманут!
         function showCaptchaModal(sid, imgUrl) { 
             return new Promise((resolve, reject) => { 
-                document.getElementById('captchaImg').src = imgUrl;
-                const input = document.getElementById('captchaInput');
-                input.value = '';
-                
-                input.onkeydown = (e) => { 
-                    if(e.key === 'Enter') submitCaptcha(); 
-                };
-                
+                currentCaptchaUrl = imgUrl;
+                document.getElementById('captchaInput').value = '';
                 document.getElementById('captchaModal').classList.remove('hidden'); 
                 activeCaptcha = { sid, resolve, reject };
-                setTimeout(() => input.focus(), 100);
             }); 
+        }
+
+        function openCaptchaUrl() {
+            if (!currentCaptchaUrl) return;
+            
+            // Ссылка ведет на НАШ роут /solve, ВК думает что это просто внешний сайт и открывает браузер.
+            const redirectUrl = `${API_URL}/solve?url=${encodeURIComponent(currentCaptchaUrl)}`;
+
+            // Универсальный метод открытия браузера внутри приложения ВК
+            vkBridge.send("VKWebAppOpenUrl", { "url": redirectUrl })
+                .catch(() => {
+                    // Страховка для ПК
+                    window.open(redirectUrl, '_blank');
+                });
         }
 
         function closeCaptcha(success) { 
             document.getElementById('captchaModal').classList.add('hidden'); 
             if (!success && activeCaptcha) activeCaptcha.reject(new Error("Отмена капчи"));
             activeCaptcha = null; 
+            currentCaptchaUrl = "";
         }
 
         function submitCaptcha() {
-            const val = document.getElementById('captchaInput').value.trim();
-            if (!val || !activeCaptcha) return;
+            let val = document.getElementById('captchaInput').value.trim();
+            if (!val) val = "1"; // Если просто нажали Готово
+            
+            if (!activeCaptcha) return;
             const res = { captcha_sid: activeCaptcha.sid, captcha_key: val };
             const resolve = activeCaptcha.resolve;
             closeCaptcha(true);
@@ -365,790 +267,295 @@
 
         function triggerCaptchaUI(text) {
             const l = document.getElementById('actionLoader');
-            if(l) { 
-                document.getElementById('actionLoaderText').innerText = text; 
-                l.classList.remove('hidden', 'bg-blue-600', 'text-white'); 
-                l.classList.add('bg-captcha-alert'); 
-                document.getElementById('actionSpinner').classList.add('hidden'); 
-            }
+            if(l) { document.getElementById('actionLoaderText').innerText = text; l.classList.remove('hidden', 'bg-blue-600', 'text-white'); l.classList.add('bg-captcha-alert'); document.getElementById('actionSpinner').classList.add('hidden'); }
             vkBridge.send("VKWebAppTapticNotificationOccurred", {"type": "error"});
         }
 
         function resetCaptchaUI() {
             const l = document.getElementById('actionLoader');
-            if(l) { 
-                l.classList.add('hidden'); 
-                l.classList.remove('bg-captcha-alert'); 
-                l.classList.add('bg-blue-600', 'text-white'); 
-                document.getElementById('actionSpinner').classList.remove('hidden'); 
-            }
+            if(l) { l.classList.add('hidden'); l.classList.remove('bg-captcha-alert'); l.classList.add('bg-blue-600', 'text-white'); document.getElementById('actionSpinner').classList.remove('hidden'); }
         }
 
         // --- УТИЛИТЫ И МОДАЛКИ ---
         function safeNavigate(callback) {
-            if (isActionActive || isProcessing) {
-                uiConfirm('Прервать процесс?', 'Процесс ещё не завершен', () => { 
-                    isActionActive = false; 
-                    isProcessing = false; 
-                    callback(); 
-                });
-            } else {
-                callback();
-            }
+            if (isActionActive || isProcessing) uiConfirm('Прервать процесс?', 'Процесс ещё не завершен', () => { isActionActive = false; isProcessing = false; callback(); });
+            else callback();
         }
 
-        function closeUM() { 
-            document.getElementById('universalModal').classList.add('hidden'); 
-        }
+        function closeUM() { document.getElementById('universalModal').classList.add('hidden'); }
         
         function uiAlert(title, desc) { 
-            document.getElementById('umTitle').innerText = title; 
-            document.getElementById('umDesc').innerText = desc; 
-            document.getElementById('umDescContainer').classList.remove('hidden'); 
-            document.getElementById('umInput').classList.add('hidden'); 
-            document.getElementById('umCancelBtn').classList.add('hidden'); 
-            
-            const btn = document.getElementById('umConfirmBtn');
-            btn.innerText = 'Закрыть'; 
-            btn.className = 'w-full bg-blue-600 text-white py-3 rounded-xl font-bold uppercase text-xs tracking-widest';
-            btn.onclick = closeUM; 
-            
+            document.getElementById('umTitle').innerText = title; document.getElementById('umDesc').innerText = desc; document.getElementById('umDescContainer').classList.remove('hidden'); document.getElementById('umInput').classList.add('hidden'); document.getElementById('umCancelBtn').classList.add('hidden'); 
+            const btn = document.getElementById('umConfirmBtn'); btn.innerText = 'Закрыть'; btn.className = 'w-full bg-blue-600 text-white py-3 rounded-xl font-bold uppercase text-xs tracking-widest'; btn.onclick = closeUM; 
             document.getElementById('universalModal').classList.remove('hidden'); 
         }
         
         function uiConfirm(title, desc, onAction) { 
-            document.getElementById('umTitle').innerText = title; 
-            document.getElementById('umDesc').innerText = desc; 
-            document.getElementById('umDescContainer').classList.remove('hidden'); 
-            document.getElementById('umInput').classList.add('hidden'); 
-            document.getElementById('umCancelBtn').classList.remove('hidden'); 
-            
-            const btn = document.getElementById('umConfirmBtn');
-            btn.innerText = 'Подтвердить'; 
-            btn.className = 'flex-1 bg-red-500 text-white py-3 rounded-xl font-bold uppercase text-xs tracking-widest';
-            btn.onclick = () => { onAction(); closeUM(); }; 
-            
+            document.getElementById('umTitle').innerText = title; document.getElementById('umDesc').innerText = desc; document.getElementById('umDescContainer').classList.remove('hidden'); document.getElementById('umInput').classList.add('hidden'); document.getElementById('umCancelBtn').classList.remove('hidden'); 
+            const btn = document.getElementById('umConfirmBtn'); btn.innerText = 'Подтвердить'; btn.className = 'flex-1 bg-red-500 text-white py-3 rounded-xl font-bold uppercase text-xs tracking-widest'; btn.onclick = () => { onAction(); closeUM(); }; 
             document.getElementById('universalModal').classList.remove('hidden'); 
         }
         
         function uiPrompt(title, defVal, cb) { 
-            document.getElementById('umTitle').innerText = title; 
-            document.getElementById('umDescContainer').classList.add('hidden'); 
-            const inp = document.getElementById('umInput'); 
-            inp.value = defVal; 
-            inp.readOnly = false; 
-            inp.classList.remove('hidden'); 
-            document.getElementById('umCancelBtn').classList.remove('hidden'); 
-            
-            const btn = document.getElementById('umConfirmBtn');
-            btn.innerText = 'ОК'; 
-            btn.className = 'flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold uppercase text-xs tracking-widest';
-            btn.onclick = () => { 
-                const val = inp.value.trim(); 
-                if(val) cb(val); 
-                closeUM(); 
-            }; 
-            document.getElementById('universalModal').classList.remove('hidden'); 
-            setTimeout(() => inp.focus(), 100);
+            document.getElementById('umTitle').innerText = title; document.getElementById('umDescContainer').classList.add('hidden'); const inp = document.getElementById('umInput'); inp.value = defVal; inp.readOnly = false; inp.classList.remove('hidden'); document.getElementById('umCancelBtn').classList.remove('hidden'); 
+            const btn = document.getElementById('umConfirmBtn'); btn.innerText = 'ОК'; btn.className = 'flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold uppercase text-xs tracking-widest'; btn.onclick = () => { const val = inp.value.trim(); if(val) cb(val); closeUM(); }; 
+            document.getElementById('universalModal').classList.remove('hidden'); setTimeout(() => inp.focus(), 100);
         }
 
         function uiCopyLink(url) {
-            document.getElementById('umTitle').innerText = 'Ссылка на файл';
-            document.getElementById('umDescContainer').classList.add('hidden');
-            const inp = document.getElementById('umInput');
-            inp.value = url;
-            inp.readOnly = true; 
-            inp.classList.remove('hidden');
-
-            const cancelBtn = document.getElementById('umCancelBtn');
-            cancelBtn.classList.remove('hidden');
-            cancelBtn.innerText = 'Закрыть';
-            cancelBtn.onclick = closeUM;
-
-            const btn = document.getElementById('umConfirmBtn');
-            btn.innerText = 'Копировать';
-            btn.className = 'flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold uppercase text-xs tracking-widest';
-            
+            document.getElementById('umTitle').innerText = 'Ссылка на файл'; document.getElementById('umDescContainer').classList.add('hidden'); const inp = document.getElementById('umInput'); inp.value = url; inp.readOnly = true; inp.classList.remove('hidden');
+            const cancelBtn = document.getElementById('umCancelBtn'); cancelBtn.classList.remove('hidden'); cancelBtn.innerText = 'Закрыть'; cancelBtn.onclick = closeUM;
+            const btn = document.getElementById('umConfirmBtn'); btn.innerText = 'Копировать'; btn.className = 'flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold uppercase text-xs tracking-widest';
             btn.onclick = () => {
-                inp.select();
-                inp.setSelectionRange(0, 99999); 
-                const showSuccess = () => {
-                    btn.innerText = 'Скопировано';
-                    btn.classList.replace('bg-blue-600', 'bg-green-600');
-                    setTimeout(closeUM, 1000);
-                };
-                try {
-                    navigator.clipboard.writeText(url).then(showSuccess).catch(() => { 
-                        document.execCommand('copy'); 
-                        showSuccess(); 
-                    });
-                } catch(e) { 
-                    document.execCommand('copy'); 
-                    showSuccess(); 
-                }
+                inp.select(); inp.setSelectionRange(0, 99999); 
+                const showSuccess = () => { btn.innerText = 'Скопировано'; btn.classList.replace('bg-blue-600', 'bg-green-600'); setTimeout(closeUM, 1000); };
+                try { navigator.clipboard.writeText(url).then(showSuccess).catch(() => { document.execCommand('copy'); showSuccess(); }); } catch(e) { document.execCommand('copy'); showSuccess(); }
             };
-            
-            document.getElementById('universalModal').classList.remove('hidden');
-            setTimeout(() => { inp.focus(); inp.select(); }, 100);
+            document.getElementById('universalModal').classList.remove('hidden'); setTimeout(() => { inp.focus(); inp.select(); }, 100);
         }
 
-        function showActionLoader(show, text = "Синхронизация...") { 
-            const al = document.getElementById('actionLoader'); 
-            if (al) { 
-                document.getElementById('actionLoaderText').innerText = text; 
-                al.classList.toggle('hidden', !show); 
-            } 
-        }
+        function showActionLoader(show, text = "Синхронизация...") { const al = document.getElementById('actionLoader'); if (al) { document.getElementById('actionLoaderText').innerText = text; al.classList.toggle('hidden', !show); } }
 
-        // --- ДЕЙСТВИЯ API И ОТОБРАЖЕНИЕ ---
         async function fetchFiles(btn) {
-            showActionLoader(true, "СОЕДИНЕНИЕ..."); 
-            if (btn && btn.classList) btn.classList.add('animate-spin');
-            
-            try {
-                allItems = await apiFetch('/files');
-                updateStorageDisplay();
-                applyFilters();
-            } catch (e) { 
-                document.getElementById('fileContainer').innerHTML = '<div class="py-20 text-center text-orange-400 font-bold uppercase text-[10px] italic">Ошибка сети...</div>'; 
-            } finally { 
-                showActionLoader(false); 
-                if (btn && btn.classList) setTimeout(() => btn.classList.remove('animate-spin'), 500); 
-            }
+            showActionLoader(true, "СОЕДИНЕНИЕ..."); if (btn && btn.classList) btn.classList.add('animate-spin');
+            try { allItems = await apiFetch('/files'); updateStorageDisplay(); applyFilters(); } catch (e) { document.getElementById('fileContainer').innerHTML = '<div class="py-20 text-center text-orange-400 font-bold uppercase text-[10px] italic">Ошибка сети...</div>'; } finally { showActionLoader(false); if (btn && btn.classList) setTimeout(() => btn.classList.remove('animate-spin'), 500); }
         }
         
         function updateStorageDisplay() {
             const totalBytes = allItems.reduce((sum, item) => sum + (item.size || 0), 0);
             let sizeStr = (totalBytes / (1024 * 1024 * 1024)).toFixed(2) + ' ГБ';
-            
-            if (totalBytes < 1024 * 1024 * 1024) {
-                sizeStr = (totalBytes / (1024 * 1024)).toFixed(1) + ' МБ';
-            }
-            if (totalBytes === 0) {
-                sizeStr = '0 МБ';
-            }
-            
-            const el = document.getElementById('storageUsed');
-            if(el) el.innerText = 'Занято: ' + sizeStr;
+            if (totalBytes < 1024 * 1024 * 1024) sizeStr = (totalBytes / (1024 * 1024)).toFixed(1) + ' МБ';
+            if (totalBytes === 0) sizeStr = '0 МБ';
+            const el = document.getElementById('storageUsed'); if(el) el.innerText = 'ЗАНЯТО: ' + sizeStr;
         }
 
-        function isItemInTrash(item) { 
-            if (!item.tags) return false;
-            return item.tags.some(t => t.toLowerCase().trim() === '.trash' || t.toLowerCase().trim().startsWith('.trash/')); 
-        }
+        function isItemInTrash(item) { if (!item.tags) return false; return item.tags.some(t => t.toLowerCase().trim() === '.trash' || t.toLowerCase().trim().startsWith('.trash/')); }
 
         function getItemPath(item) {
             if (!item.tags || item.tags.length === 0) return "";
-            
-            if (item.tags.some(t => t.toLowerCase().trim() === '.trash')) {
-                const orig = item.tags.find(t => t.toLowerCase().trim().startsWith('original_path:'));
-                return orig ? orig.replace(/original_path:/i, '') : "";
-            }
-            
-            const oldTrashTag = item.tags.find(t => t.toLowerCase().trim().startsWith('.trash/'));
-            if (oldTrashTag) return oldTrashTag.substring(7).replace(/___/g, '/');
-            
+            if (item.tags.some(t => t.toLowerCase().trim() === '.trash')) { const orig = item.tags.find(t => t.toLowerCase().trim().startsWith('original_path:')); return orig ? orig.replace(/original_path:/i, '') : ""; }
+            const oldTrashTag = item.tags.find(t => t.toLowerCase().trim().startsWith('.trash/')); if (oldTrashTag) return oldTrashTag.substring(7).replace(/___/g, '/');
             return item.tags.find(t => t.toLowerCase().trim() !== '.trash' && !t.toLowerCase().trim().startsWith('original_path:') && !t.toLowerCase().trim().startsWith(LINK_PREFIX.toLowerCase())) || "";
         }
 
         function extractHiddenLink(item) {
-            if (!item.tags) return null;
-            const tag = item.tags.find(t => t.startsWith(LINK_PREFIX));
-            return tag ? tag.substring(LINK_PREFIX.length) : null;
+            if (!item.tags) return null; const tag = item.tags.find(t => t.startsWith(LINK_PREFIX)); return tag ? tag.substring(LINK_PREFIX.length) : null;
         }
 
         function applyFilters() {
             const query = (document.getElementById('searchInput')?.value || "").toLowerCase();
             const sort = document.getElementById('sortSelect').value;
             const pathStr = currentPath.join('/');
-            
             let folders = new Set(), files = [];
             const isTrashRoot = currentPath.length === 1 && currentPath[0] === '.trash';
             document.getElementById('trashPanel').classList.toggle('hidden', !isTrashRoot);
 
             allItems.forEach(i => {
-                const inTrash = isItemInTrash(i);
-                const path = getItemPath(i);
-                const fullPath = path ? path + '/' + (i.title || "") : (i.title || "");
-
-                if (path.toLowerCase().trim() === '.trash' || path.toLowerCase().trim().startsWith('.trash/')) {
-                    if (isTrashRoot) files.push(i);
-                    return;
-                }
-
-                if (inTrash) { 
-                    if (isTrashRoot) files.push(i); 
-                    return; 
-                }
-                
+                const inTrash = isItemInTrash(i); const path = getItemPath(i); const fullPath = path ? path + '/' + (i.title || "") : (i.title || "");
+                if (path.toLowerCase().trim() === '.trash' || path.toLowerCase().trim().startsWith('.trash/')) { if (isTrashRoot) files.push(i); return; }
+                if (inTrash) { if (isTrashRoot) files.push(i); return; }
                 if (isTrashRoot) return;
-
-                if (query) { 
-                    if (fullPath.toLowerCase().includes(query)) files.push(i); 
-                } else {
-                    if (pathStr === "" && path === "") {
-                        files.push(i);
-                    } else if (pathStr === "" && path !== "") {
-                        folders.add(path.split('/')[0]);
-                    } else if (path === pathStr) {
-                        files.push(i);
-                    } else if (path.startsWith(pathStr + "/")) {
-                        const rel = path.substring(pathStr.length + 1);
-                        folders.add(rel.split('/')[0]);
-                    }
+                if (query) { if (fullPath.toLowerCase().includes(query)) files.push(i); } else {
+                    if (pathStr === "" && path === "") files.push(i); else if (pathStr === "" && path !== "") folders.add(path.split('/')[0]);
+                    else if (path === pathStr) files.push(i); else if (path.startsWith(pathStr + "/")) folders.add(path.substring(pathStr.length + 1).split('/')[0]);
                 }
             });
 
             const cleanFolders = [];
-            folders.forEach(f => {
-                if (f.toLowerCase().trim() !== '.trash' && !f.toLowerCase().trim().startsWith(LINK_PREFIX.toLowerCase())) {
-                    cleanFolders.push(f);
-                }
-            });
-
+            folders.forEach(f => { if (f.toLowerCase().trim() !== '.trash' && !f.toLowerCase().trim().startsWith(LINK_PREFIX.toLowerCase())) cleanFolders.push(f); });
             files.sort((a, b) => {
                 if (sort === 'date_desc') return (b.date || 0) - (a.date || 0);
                 if (sort === 'date_asc') return (a.date || 0) - (b.date || 0);
-                if (sort === 'type_asc') {
-                    const extA = (a.title || "").split('.').pop().toLowerCase();
-                    const extB = (b.title || "").split('.').pop().toLowerCase();
-                    if (extA === extB) return (a.title || "").localeCompare(b.title || "");
-                    return extA.localeCompare(extB);
-                }
+                if (sort === 'type_asc') { const extA = (a.title || "").split('.').pop().toLowerCase(); const extB = (b.title || "").split('.').pop().toLowerCase(); if (extA === extB) return (a.title || "").localeCompare(b.title || ""); return extA.localeCompare(extB); }
                 return (a.title || "").localeCompare(b.title || "");
             });
-            
-            currentVisibleItems.folders = cleanFolders.sort();
-            currentVisibleItems.files = files;
-            render(currentVisibleItems.folders, currentVisibleItems.files);
+            currentVisibleItems.folders = cleanFolders.sort(); currentVisibleItems.files = files; render(currentVisibleItems.folders, currentVisibleItems.files);
         }
 
         function getFileActionButtons(file, inTrash) {
-            const fName = file.title || "";
-            const ext = (fName.split('.').pop() || '').toLowerCase();
-            const isWeblink = ext === 'weblink';
-            
+            const fName = file.title || ""; const ext = (fName.split('.').pop() || '').toLowerCase(); const isWeblink = ext === 'weblink';
             const displayTitle = isWeblink ? fName.replace(/\.weblink$/i, '') : fName;
-            
-            // Экранирование для JS инъекций
-            const safeTitle = escJs(displayTitle);
-            const safeUrl = escJs(file.url || "");
+            const safeTitle = escJs(displayTitle); const safeUrl = escJs(file.url || "");
 
-            if (inTrash) {
-                return `
-                    <button onclick="uiAlert('Полное имя', '${safeTitle}')" class="flex-1 bg-gray-50 text-gray-500 py-2 rounded-xl active:bg-gray-100 transition-colors">Имя</button>
-                    <button onclick="restoreItemById(${file.id})" class="flex-1 bg-blue-50 text-blue-600 py-2 rounded-xl active:bg-blue-100 transition-colors">Восстановить</button>
-                    <button onclick="uiConfirm('Стереть навсегда?', 'Удалить из ВК.', () => deleteFileById(${file.id}))" class="flex-1 bg-red-50 text-red-500 py-2 rounded-xl active:bg-red-100 transition-colors">Стереть</button>
-                `;
-            }
-            
+            if (inTrash) return `<button onclick="uiAlert('Полное имя', '${safeTitle}')" class="flex-1 bg-gray-50 text-gray-500 py-2 rounded-xl active:bg-gray-100 transition-colors">Имя</button><button onclick="restoreItemById(${file.id})" class="flex-1 bg-blue-50 text-blue-600 py-2 rounded-xl active:bg-blue-100 transition-colors">Восстановить</button><button onclick="uiConfirm('Стереть навсегда?', 'Удалить из ВК.', () => deleteFileById(${file.id}))" class="flex-1 bg-red-50 text-red-500 py-2 rounded-xl active:bg-red-100 transition-colors">Стереть</button>`;
             if (isWeblink) {
                 const hiddenUrl = extractHiddenLink(file);
                 if (hiddenUrl) {
                     const safeHiddenUrl = escJs(hiddenUrl);
-                    return `
-                        <button onclick="window.open('${safeHiddenUrl}', '_blank')" class="flex-1 min-w-[20%] bg-blue-50 text-blue-600 py-2 rounded-xl active:bg-blue-100 transition-colors">Перейти</button>
-                        <button onclick="renameFileById(${file.id}, '${safeTitle}', true)" class="flex-1 min-w-[20%] bg-gray-50 text-gray-500 py-2 rounded-xl active:bg-gray-100 transition-colors">Имя</button>
-                        <button onclick="uiCopyLink('${safeHiddenUrl}')" class="flex-1 min-w-[20%] bg-green-50 text-green-600 py-2 rounded-xl active:bg-green-100 transition-colors">ССЫЛКА</button>
-                    `;
+                    return `<button onclick="window.open('${safeHiddenUrl}', '_blank')" class="flex-1 min-w-[20%] bg-blue-50 text-blue-600 py-2 rounded-xl active:bg-blue-100 transition-colors">Перейти</button><button onclick="renameFileById(${file.id}, '${safeTitle}', true)" class="flex-1 min-w-[20%] bg-gray-50 text-gray-500 py-2 rounded-xl active:bg-gray-100 transition-colors">Имя</button><button onclick="uiCopyLink('${safeHiddenUrl}')" class="flex-1 min-w-[20%] bg-green-50 text-green-600 py-2 rounded-xl active:bg-green-100 transition-colors">ССЫЛКА</button>`;
                 } else {
-                    return `
-                        <button onclick="handleWeblinkAction('${safeUrl}', '${safeTitle}', 'open')" class="flex-1 min-w-[20%] bg-blue-50 text-blue-600 py-2 rounded-xl active:bg-blue-100 transition-colors">Перейти</button>
-                        <button onclick="renameFileById(${file.id}, '${safeTitle}', true)" class="flex-1 min-w-[20%] bg-gray-50 text-gray-500 py-2 rounded-xl active:bg-gray-100 transition-colors">Имя</button>
-                        <button onclick="handleWeblinkAction('${safeUrl}', '${safeTitle}', 'share')" class="flex-1 min-w-[20%] bg-green-50 text-green-600 py-2 rounded-xl active:bg-green-100 transition-colors">ССЫЛКА</button>
-                    `;
+                    return `<button onclick="handleWeblinkAction('${safeUrl}', '${safeTitle}', 'open')" class="flex-1 min-w-[20%] bg-blue-50 text-blue-600 py-2 rounded-xl active:bg-blue-100 transition-colors">Перейти</button><button onclick="renameFileById(${file.id}, '${safeTitle}', true)" class="flex-1 min-w-[20%] bg-gray-50 text-gray-500 py-2 rounded-xl active:bg-gray-100 transition-colors">Имя</button><button onclick="handleWeblinkAction('${safeUrl}', '${safeTitle}', 'share')" class="flex-1 min-w-[20%] bg-green-50 text-green-600 py-2 rounded-xl active:bg-green-100 transition-colors">ССЫЛКА</button>`;
                 }
             }
 
-            const isImage = ['jpg','jpeg','png','gif','webp','bmp','svg'].includes(ext);
-            const isVideo = ['mp4','mov','webm','avi','mkv'].includes(ext);
-            const isArchive = ['zip','rar','7z','tar','gz'].includes(ext);
-            
+            const isImage = ['jpg','jpeg','png','gif','webp','bmp','svg'].includes(ext); const isVideo = ['mp4','mov','webm','avi','mkv'].includes(ext); const isArchive = ['zip','rar','7z','tar','gz'].includes(ext);
             const isPC = !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
             const canPreview = isImage || isVideo || ['doc','docx','xls','xlsx','ppt','pptx','txt','csv','json','md','pdf'].includes(ext) || (isPC && isArchive);
-            
             let previewAction = '';
-            
-            if (isImage) {
-                previewAction = `previewImage('${safeUrl}')`;
-            } else if (canPreview) {
-                previewAction = `handlePreview('${safeUrl}', '${ext}', '${safeTitle}', '${file.owner_id}', '${file.id}')`;
-            }
+            if (isImage) previewAction = `previewImage('${safeUrl}')`; else if (canPreview) previewAction = `handlePreview('${safeUrl}', '${ext}', '${safeTitle}', '${file.owner_id}', '${file.id}')`;
 
-            return `
-                ${canPreview ? `<button onclick="${previewAction}" class="flex-1 min-w-[20%] bg-purple-50 text-purple-600 py-2 rounded-xl active:bg-purple-100 transition-colors">Смотреть</button>` : ''}
-                <button onclick="downloadFile('${safeUrl}', '${safeTitle}')" class="flex-1 min-w-[20%] bg-blue-50 text-blue-600 py-2 rounded-xl active:bg-blue-100 transition-colors">Скачать</button>
-                <button onclick="renameFileById(${file.id}, '${safeTitle}', false)" class="flex-1 min-w-[20%] bg-gray-50 text-gray-500 py-2 rounded-xl active:bg-gray-100 transition-colors">Имя</button>
-                <button onclick="uiCopyLink('${safeUrl}')" class="flex-1 min-w-[20%] bg-green-50 text-green-600 py-2 rounded-xl active:bg-green-100 transition-colors">ССЫЛКА</button>
-            `;
+            return `${canPreview ? `<button onclick="${previewAction}" class="flex-1 min-w-[20%] bg-purple-50 text-purple-600 py-2 rounded-xl active:bg-purple-100 transition-colors">Смотреть</button>` : ''}<button onclick="downloadFile('${safeUrl}', '${safeTitle}')" class="flex-1 min-w-[20%] bg-blue-50 text-blue-600 py-2 rounded-xl active:bg-blue-100 transition-colors">Скачать</button><button onclick="renameFileById(${file.id}, '${safeTitle}', false)" class="flex-1 min-w-[20%] bg-gray-50 text-gray-500 py-2 rounded-xl active:bg-gray-100 transition-colors">Имя</button><button onclick="uiCopyLink('${safeUrl}')" class="flex-1 min-w-[20%] bg-green-50 text-green-600 py-2 rounded-xl active:bg-green-100 transition-colors">ССЫЛКА</button>`;
         }
 
         function render(folders, files) {
-            const container = document.getElementById('fileContainer'); 
-            container.innerHTML = '';
-            
-            updateBreadcrumb();
-            
-            const inTrash = currentPath[0] === '.trash';
-            const hideActionButtons = selectionMode || clipboard !== null;
+            const container = document.getElementById('fileContainer'); container.innerHTML = ''; updateBreadcrumb();
+            const inTrash = currentPath[0] === '.trash'; const hideActionButtons = selectionMode || clipboard !== null;
 
             folders.forEach(f => {
-                const div = document.createElement('div');
-                const isSelected = selectedIds.has('folder:' + f);
-                div.className = `bg-white p-4 rounded-2xl flex flex-col gap-3 shadow-sm border border-gray-100 file-card ${isSelected ? 'selected' : ''}`;
-                
-                div.onclick = (e) => { 
-                    if(selectionMode) { toggleItemSelection('folder:' + f); e.stopPropagation(); } 
-                };
-                
-                const safeF = escJs(f);
-                const htmlF = escHtml(f);
-
-                div.innerHTML = `
-                    <div class="flex items-center gap-3 cursor-pointer" onclick="if(!selectionMode){currentPath.push('${safeF}'); applyFilters();}">
-                        ${selectionMode ? `<div class="p-1">${isSelected ? '<i data-lucide="check-circle-2" class="text-blue-500 w-5 h-5"></i>' : '<i data-lucide="circle" class="text-gray-300 w-5 h-5"></i>'}</div>` : ''}
-                        <div class="bg-blue-50 p-2.5 rounded-[14px] text-blue-500"><i data-lucide="folder" class="w-6 h-6 fill-current"></i></div>
-                        <div class="flex-1 min-w-0">
-                            <div class="font-bold text-gray-800 text-[15px] truncate">${htmlF}</div>
-                            <div class="text-[10px] text-gray-400 uppercase font-black tracking-widest mt-0.5">Папка</div>
-                        </div>
-                    </div>
-                    <div class="flex w-full gap-2 px-1 uppercase text-[11px] font-black text-center transition-opacity duration-200 ${hideActionButtons ? 'opacity-0 pointer-events-none' : 'opacity-100'}">
-                        <button onclick="uiPrompt('Имя папки', '${safeF}', (n) => renameItem('folder', '${safeF}', n))" class="flex-1 bg-gray-50 text-gray-500 py-2 rounded-xl active:bg-gray-100 transition-colors">Переименовать</button>
-                    </div>`;
+                const div = document.createElement('div'); const isSelected = selectedIds.has('folder:' + f); div.className = `bg-white p-4 rounded-2xl flex flex-col gap-3 shadow-sm border border-gray-100 file-card ${isSelected ? 'selected' : ''}`;
+                div.onclick = (e) => { if(selectionMode) { toggleItemSelection('folder:' + f); e.stopPropagation(); } };
+                const safeF = escJs(f); const htmlF = escHtml(f);
+                div.innerHTML = `<div class="flex items-center gap-3 cursor-pointer" onclick="if(!selectionMode){currentPath.push('${safeF}'); applyFilters();}"> ${selectionMode ? `<div class="p-1">${isSelected ? '<i data-lucide="check-circle-2" class="text-blue-500 w-5 h-5"></i>' : '<i data-lucide="circle" class="text-gray-300 w-5 h-5"></i>'}</div>` : ''} <div class="bg-blue-50 p-2.5 rounded-[14px] text-blue-500"><i data-lucide="folder" class="w-6 h-6 fill-current"></i></div> <div class="flex-1 min-w-0"> <div class="font-bold text-gray-800 text-[15px] truncate">${htmlF}</div> <div class="text-[10px] text-gray-400 uppercase font-black tracking-widest mt-0.5">Папка</div> </div> </div> <div class="flex w-full gap-2 px-1 uppercase text-[11px] font-black text-center transition-opacity duration-200 ${hideActionButtons ? 'opacity-0 pointer-events-none' : 'opacity-100'}"> <button onclick="uiPrompt('Имя папки', '${safeF}', (n) => renameItem('folder', '${safeF}', n))" class="flex-1 bg-gray-50 text-gray-500 py-2 rounded-xl active:bg-gray-100 transition-colors">Переименовать</button> </div>`;
                 container.appendChild(div);
             });
 
             files.forEach(file => {
-                const div = document.createElement('div');
-                const isSelected = selectedIds.has('file:' + file.id);
-                div.className = `bg-white p-4 rounded-2xl flex flex-col gap-3 shadow-sm border border-gray-100 file-card ${isSelected ? 'selected' : ''}`;
-                
-                div.onclick = (e) => { 
-                    if(selectionMode) { toggleItemSelection('file:' + file.id); e.stopPropagation(); } 
-                };
-                
-                const fName = file.title || "";
-                const ext = (fName.split('.').pop() || '').toLowerCase();
-                const isWeblink = ext === 'weblink';
-                
-                let displayTitle = fName;
-                if (isWeblink) {
-                    displayTitle = fName.replace(/\.weblink$/i, '');
-                }
-                
+                const div = document.createElement('div'); const isSelected = selectedIds.has('file:' + file.id); div.className = `bg-white p-4 rounded-2xl flex flex-col gap-3 shadow-sm border border-gray-100 file-card ${isSelected ? 'selected' : ''}`;
+                div.onclick = (e) => { if(selectionMode) { toggleItemSelection('file:' + file.id); e.stopPropagation(); } };
+                const fName = file.title || ""; const ext = (fName.split('.').pop() || '').toLowerCase(); const isWeblink = ext === 'weblink';
+                let displayTitle = fName; if (isWeblink) displayTitle = fName.replace(/\.weblink$/i, '');
                 const buttonsBlock = `<div class="flex w-full gap-2 px-1 uppercase text-[11px] font-black text-center transition-opacity duration-200 ${hideActionButtons ? 'opacity-0 pointer-events-none' : 'opacity-100'}">${getFileActionButtons(file, inTrash)}</div>`;
-                
-                const extPrefix = (!isWeblink && fName.includes('.')) ? `${ext.toUpperCase()} • ` : '';
-                const subTitleHTML = isWeblink 
-                    ? `ССЫЛКА • ${formatDate(file.date)}` 
-                    : `${extPrefix}${((file.size || 0)/1024/1024).toFixed(2)} МБ • ${formatDate(file.date)}`;
-
-                const safePath = escJs(getItemPath(file));
-                const htmlTitle = escHtml(displayTitle);
-
-                div.innerHTML = `
-                    <div class="flex items-center gap-3 cursor-pointer" onclick="if(!selectionMode && document.getElementById('searchInput').value) navigateToFileFolder('${safePath}')">
-                        ${selectionMode ? `<div class="p-1">${isSelected ? '<i data-lucide="check-circle-2" class="text-blue-500 w-5 h-5"></i>' : '<i data-lucide="circle" class="text-gray-300 w-5 h-5"></i>'}</div>` : ''}
-                        ${isWeblink ? `<div class="bg-indigo-50 p-2.5 rounded-[14px] text-indigo-500"><i data-lucide="link" class="w-6 h-6"></i></div>` : `<div class="bg-gray-50 p-2.5 rounded-[14px] text-gray-400"><i data-lucide="file-text" class="w-6 h-6"></i></div>`}
-                        <div class="flex-1 min-w-0">
-                            <div class="font-bold text-gray-800 text-[15px] truncate pr-2">${htmlTitle}</div>
-                            <div class="text-[10px] text-blue-500 font-bold uppercase tracking-widest mt-0.5 leading-tight opacity-90">${subTitleHTML}</div>
-                        </div>
-                    </div>${buttonsBlock}`;
-                
+                const extPrefix = (!isWeblink && fName.includes('.')) ? `${ext.toUpperCase()} • ` : ''; const subTitleHTML = isWeblink ? `ССЫЛКА • ${formatDate(file.date)}` : `${extPrefix}${((file.size || 0)/1024/1024).toFixed(2)} МБ • ${formatDate(file.date)}`;
+                const safePath = escJs(getItemPath(file)); const htmlTitle = escHtml(displayTitle);
+                div.innerHTML = `<div class="flex items-center gap-3 cursor-pointer" onclick="if(!selectionMode && document.getElementById('searchInput').value) navigateToFileFolder('${safePath}')"> ${selectionMode ? `<div class="p-1">${isSelected ? '<i data-lucide="check-circle-2" class="text-blue-500 w-5 h-5"></i>' : '<i data-lucide="circle" class="text-gray-300 w-5 h-5"></i>'}</div>` : ''} ${isWeblink ? `<div class="bg-indigo-50 p-2.5 rounded-[14px] text-indigo-500"><i data-lucide="link" class="w-6 h-6"></i></div>` : `<div class="bg-gray-50 p-2.5 rounded-[14px] text-gray-400"><i data-lucide="file-text" class="w-6 h-6"></i></div>`} <div class="flex-1 min-w-0"> <div class="font-bold text-gray-800 text-[15px] truncate pr-2">${htmlTitle}</div> <div class="text-[10px] text-blue-500 font-bold uppercase tracking-widest mt-0.5 leading-tight opacity-90">${subTitleHTML}</div> </div> </div>${buttonsBlock}`;
                 container.appendChild(div);
             });
-            
-            lucide.createIcons(); 
-            updateBottomBar();
+            lucide.createIcons(); updateBottomBar();
         }
 
-        // --- МУЛЬТИВЫБОР ---
-        function toggleSelectionMode() { 
-            selectionMode = !selectionMode; 
-            selectedIds.clear(); 
-            document.getElementById('multiSelectBtn').classList.toggle('text-blue-500', selectionMode); 
-            applyFilters(); 
-        }
-
-        function toggleItemSelection(idKey) { 
-            if (selectedIds.has(idKey)) selectedIds.delete(idKey); 
-            else selectedIds.add(idKey); 
-            vkBridge.send("VKWebAppTapticNotificationOccurred", {"type": "light"}); 
-            applyFilters(); 
-        }
-
+        function toggleSelectionMode() { selectionMode = !selectionMode; selectedIds.clear(); document.getElementById('multiSelectBtn').classList.toggle('text-blue-500', selectionMode); applyFilters(); }
+        function toggleItemSelection(idKey) { if (selectedIds.has(idKey)) selectedIds.delete(idKey); else selectedIds.add(idKey); vkBridge.send("VKWebAppTapticNotificationOccurred", {"type": "light"}); applyFilters(); }
         function selectAll() {
             let allSelected = currentVisibleItems.folders.every(f => selectedIds.has('folder:'+f)) && currentVisibleItems.files.every(file => selectedIds.has('file:'+file.id));
-            if (allSelected && (currentVisibleItems.folders.length > 0 || currentVisibleItems.files.length > 0)) {
-                currentVisibleItems.folders.forEach(f => selectedIds.delete('folder:'+f)); 
-                currentVisibleItems.files.forEach(file => selectedIds.delete('file:'+file.id));
-            } else {
-                currentVisibleItems.folders.forEach(f => selectedIds.add('folder:'+f)); 
-                currentVisibleItems.files.forEach(file => selectedIds.add('file:'+file.id));
-            }
-            vkBridge.send("VKWebAppTapticNotificationOccurred", {"type": "light"}); 
-            applyFilters();
+            if (allSelected && (currentVisibleItems.folders.length > 0 || currentVisibleItems.files.length > 0)) { currentVisibleItems.folders.forEach(f => selectedIds.delete('folder:'+f)); currentVisibleItems.files.forEach(file => selectedIds.delete('file:'+file.id)); } else { currentVisibleItems.folders.forEach(f => selectedIds.add('folder:'+f)); currentVisibleItems.files.forEach(file => selectedIds.add('file:'+file.id)); }
+            vkBridge.send("VKWebAppTapticNotificationOccurred", {"type": "light"}); applyFilters();
         }
 
         function updateBottomBar() {
-            const bar = document.getElementById('bottomBar'); 
-            const inner = document.getElementById('bottomBarInner');
-            
+            const bar = document.getElementById('bottomBar'); const inner = document.getElementById('bottomBarInner');
             if (clipboard !== null) {
-                bar.classList.remove('hidden');
-                const countToMove = clipboard.data.length;
-                
-                inner.innerHTML = `
-                    <div class="text-green-600 font-black text-[10px] uppercase tracking-widest text-center mb-2">Объектов для вставки: <span id="pasteCount">${countToMove}</span></div>
-                    <div class="flex gap-2 justify-between">
-                        <button onclick="pasteItem()" class="flex-1 bg-green-600 text-white py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest active:scale-95 transition-transform shadow-sm">Вставить сюда</button>
-                        <button onclick="cancelMove()" class="bg-green-50 text-green-600 w-12 py-3 rounded-xl flex items-center justify-center flex-none active:scale-95 transition-transform"><i data-lucide="x" class="w-5 h-5"></i></button>
-                    </div>`;
-                lucide.createIcons(); 
-                return;
+                bar.classList.remove('hidden'); const countToMove = clipboard.data.length;
+                inner.innerHTML = `<div class="text-green-600 font-black text-[10px] uppercase tracking-widest text-center mb-2">Объектов для вставки: <span id="pasteCount">${countToMove}</span></div> <div class="flex gap-2 justify-between"> <button onclick="pasteItem()" class="flex-1 bg-green-600 text-white py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest active:scale-95 transition-transform shadow-sm">Вставить сюда</button> <button onclick="cancelMove()" class="bg-green-50 text-green-600 w-12 py-3 rounded-xl flex items-center justify-center flex-none active:scale-95 transition-transform"><i data-lucide="x" class="w-5 h-5"></i></button> </div>`;
+                lucide.createIcons(); return;
             }
             if (selectionMode) {
-                bar.classList.remove('hidden');
-                const count = selectedIds.size;
-                const disabled = count === 0 ? 'opacity-50 pointer-events-none' : '';
-                const inTrash = currentPath[0] === '.trash';
-
-                const btnClass = "text-white py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest flex-1 active:scale-95 transition-transform";
-                
-                const btn2 = inTrash ? `<button onclick="bulkRestore()" class="bg-blue-600 ${disabled} ${btnClass}">Восстан.</button>` : `<button onclick="startBulkMove()" class="bg-blue-600 ${disabled} ${btnClass}">Перенос</button>`;
-                const btn3 = inTrash ? `<button onclick="uiConfirm('Стереть выбранные?', 'Удалить навсегда из ВК?', () => bulkDeletePermanently())" class="bg-red-500 ${disabled} ${btnClass}">Стереть</button>` : `<button onclick="uiConfirm('В корзину?', 'Удалить выбранные файлы?', () => bulkMoveToTrash())" class="bg-red-500 ${disabled} ${btnClass}">В корзину</button>`;
-
-                inner.innerHTML = `
-                    <div class="text-blue-600 font-black text-[10px] uppercase tracking-widest text-center mb-2">Выбрано: <span id="selectedCount">${count}</span></div>
-                    <div class="flex gap-2 justify-between">
-                        <button onclick="selectAll()" class="bg-gray-100 text-gray-600 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest flex-1 active:scale-95 transition-transform">Все</button>
-                        ${btn2}
-                        ${btn3}
-                        <button onclick="toggleSelectionMode()" class="bg-gray-100 text-gray-500 w-12 py-3 rounded-xl flex items-center justify-center flex-none active:scale-95 transition-transform"><i data-lucide="x" class="w-5 h-5"></i></button>
-                    </div>`;
+                bar.classList.remove('hidden'); const count = selectedIds.size; const disabled = count === 0 ? 'opacity-50 pointer-events-none' : ''; const inTrash = currentPath[0] === '.trash'; const btnClass = "text-white py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest flex-1 active:scale-95 transition-transform";
+                const btn2 = inTrash ? `<button onclick="bulkRestore()" class="bg-blue-600 ${disabled} ${btnClass}">Восстан.</button>` : `<button onclick="startBulkMove()" class="bg-blue-600 ${disabled} ${btnClass}">Перенос</button>`; const btn3 = inTrash ? `<button onclick="uiConfirm('Стереть выбранные?', 'Удалить навсегда из ВК?', () => bulkDeletePermanently())" class="bg-red-500 ${disabled} ${btnClass}">Стереть</button>` : `<button onclick="uiConfirm('В корзину?', 'Удалить выбранные файлы?', () => bulkMoveToTrash())" class="bg-red-500 ${disabled} ${btnClass}">В корзину</button>`;
+                inner.innerHTML = `<div class="text-blue-600 font-black text-[10px] uppercase tracking-widest text-center mb-2">Выбрано: <span id="selectedCount">${count}</span></div> <div class="flex gap-2 justify-between"> <button onclick="selectAll()" class="bg-gray-100 text-gray-600 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest flex-1 active:scale-95 transition-transform">Все</button> ${btn2} ${btn3} <button onclick="toggleSelectionMode()" class="bg-gray-100 text-gray-500 w-12 py-3 rounded-xl flex items-center justify-center flex-none active:scale-95 transition-transform"><i data-lucide="x" class="w-5 h-5"></i></button> </div>`;
                 lucide.createIcons();
-            } else {
-                bar.classList.add('hidden');
-            }
+            } else { bar.classList.add('hidden'); }
         }
 
-        async function startBulkMove() {
-            let itemsToMove = [];
-            selectedIds.forEach(idKey => { 
-                const [type, id] = idKey.split(':'); 
-                if(type === 'file') { 
-                    const f = allItems.find(i => i.id == id); 
-                    if(f) itemsToMove.push({type: 'file', data: f}); 
-                } else {
-                    itemsToMove.push({type: 'folder', data: id}); 
-                }
-            });
-            clipboard = { type: 'bulk', data: itemsToMove, oldPath: currentPath.join('/') }; 
-            toggleSelectionMode(); 
-            updateBottomBar();
-            vkBridge.send("VKWebAppTapticNotificationOccurred", {"type": "success"});
-        }
-        
-        function cancelMove() { 
-            clipboard = null; 
-            updateBottomBar(); 
-            applyFilters(); 
-        }
+        async function startBulkMove() { let itemsToMove = []; selectedIds.forEach(idKey => { const [type, id] = idKey.split(':'); if(type === 'file') { const f = allItems.find(i => i.id == id); if(f) itemsToMove.push({type: 'file', data: f}); } else { itemsToMove.push({type: 'folder', data: id}); } }); clipboard = { type: 'bulk', data: itemsToMove, oldPath: currentPath.join('/') }; toggleSelectionMode(); updateBottomBar(); vkBridge.send("VKWebAppTapticNotificationOccurred", {"type": "success"}); }
+        function cancelMove() { clipboard = null; updateBottomBar(); applyFilters(); }
 
         async function pasteItem() {
-            isActionActive = true; 
-            let nP = currentPath.join('/'); 
-            let toUpdate = [];
-            
+            isActionActive = true; let nP = currentPath.join('/'); let toUpdate = [];
             if (clipboard.type === 'bulk') {
                 clipboard.data.forEach(item => {
-                    if(item.type === 'file') {
-                        let newTags = nP;
-                        const linkTag = extractHiddenLink(item.data);
-                        if (linkTag) newTags = newTags ? newTags + ',' + LINK_PREFIX + linkTag : LINK_PREFIX + linkTag;
-                        toUpdate.push({ id: item.data.id, new_title: item.data.title, tags: newTags }); 
-                    } else { 
-                        let oldP = clipboard.oldPath ? clipboard.oldPath+'/'+item.data : item.data; 
-                        let newP = nP ? nP+'/'+item.data : item.data; 
-                        allItems.filter(i => { 
-                            const p = getItemPath(i); 
-                            return p === oldP || p.startsWith(oldP+'/'); 
-                        }).forEach(i => { 
-                            const p = getItemPath(i); 
-                            let newTags = newP + p.substring(oldP.length);
-                            const linkTag = extractHiddenLink(i);
-                            if (linkTag) newTags = newTags ? newTags + ',' + LINK_PREFIX + linkTag : LINK_PREFIX + linkTag;
-                            toUpdate.push({id: i.id, new_title: i.title, tags: newTags}); 
-                        }); 
-                    }
+                    if(item.type === 'file') { let newTags = nP; const linkTag = extractHiddenLink(item.data); if (linkTag) newTags = newTags ? newTags + ',' + LINK_PREFIX + linkTag : LINK_PREFIX + linkTag; toUpdate.push({ id: item.data.id, new_title: item.data.title, tags: newTags }); } else { let oldP = clipboard.oldPath ? clipboard.oldPath+'/'+item.data : item.data; let newP = nP ? nP+'/'+item.data : item.data; allItems.filter(i => { const p = getItemPath(i); return p === oldP || p.startsWith(oldP+'/'); }).forEach(i => { const p = getItemPath(i); let newTags = newP + p.substring(oldP.length); const linkTag = extractHiddenLink(i); if (linkTag) newTags = newTags ? newTags + ',' + LINK_PREFIX + linkTag : LINK_PREFIX + linkTag; toUpdate.push({id: i.id, new_title: i.title, tags: newTags}); }); }
                 });
             }
-            
             showActionLoader(true, `ПЕРЕНОС (0/${toUpdate.length})...`);
-            for (let i = 0; i < toUpdate.length; i++) {
-                showActionLoader(true, `ПЕРЕНОС (${i+1}/${toUpdate.length})...`);
-                await apiFetch('/move', 'POST', { items: [toUpdate[i]] });
-                await new Promise(r => setTimeout(r, 350));
-            }
-            cancelMove(); 
-            showActionLoader(false); 
-            isActionActive = false; 
-            fetchFiles();
+            for (let i = 0; i < toUpdate.length; i++) { showActionLoader(true, `ПЕРЕНОС (${i+1}/${toUpdate.length})...`); await apiFetch('/move', 'POST', { items: [toUpdate[i]] }); await new Promise(r => setTimeout(r, 350)); }
+            cancelMove(); showActionLoader(false); isActionActive = false; fetchFiles();
         }
 
-        // --- УПРАВЛЕНИЕ ФАЙЛАМИ (ОПЕРАЦИИ) ---
         function goToTrash() { currentPath = ['.trash']; applyFilters(); }
         function navigateToFileFolder(pathStr) { document.getElementById('searchInput').value = ''; currentPath = pathStr ? pathStr.split('/') : []; applyFilters(); }
         function goToRoot() { currentPath = []; selectionMode = false; applyFilters(); }
         function debounceSearch() { clearTimeout(searchTimeout); searchTimeout = setTimeout(applyFilters, 150); }
         
         function updateBreadcrumb() { 
-            const bc = document.getElementById('breadcrumb'); 
-            bc.innerHTML = `<span onclick="safeNavigate(() => goToRoot())" class="breadcrumb-item cursor-pointer">ДИСК</span>`; 
-            currentPath.forEach((p, idx) => { 
-                const s = document.createElement('span'); 
-                s.className = 'breadcrumb-item cursor-pointer'; 
-                s.innerText = p === '.trash' ? 'КОРЗИНА' : p.toUpperCase(); 
-                s.onclick = () => { 
-                    currentPath = currentPath.slice(0, idx + 1); 
-                    applyFilters(); 
-                }; 
-                bc.appendChild(s); 
-            }); 
+            const bc = document.getElementById('breadcrumb'); bc.innerHTML = `<span onclick="safeNavigate(() => goToRoot())" class="breadcrumb-item cursor-pointer">ДИСК</span>`; 
+            currentPath.forEach((p, idx) => { const s = document.createElement('span'); s.className = 'breadcrumb-item cursor-pointer'; s.innerText = p === '.trash' ? 'КОРЗИНА' : p.toUpperCase(); s.onclick = () => { currentPath = currentPath.slice(0, idx + 1); applyFilters(); }; bc.appendChild(s); }); 
         }
 
-        function formatDate(ts) { 
-            if (!ts) return '...'; 
-            let d = new Date(ts < 10000000000 ? ts * 1000 : ts); 
-            return d.toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); 
-        }
+        function formatDate(ts) { if (!ts) return '...'; let d = new Date(ts < 10000000000 ? ts * 1000 : ts); return d.toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
 
-        function renameFileById(id, currentName, isWeblink) {
-            const file = allItems.find(i => i.id == id); 
-            if (!file) return;
-            uiPrompt(isWeblink ? 'Имя ссылки' : 'Имя файла', currentName, (n) => { 
-                renameItem('file', file, isWeblink ? n + '.weblink' : n); 
-            });
-        }
+        function renameFileById(id, currentName, isWeblink) { const file = allItems.find(i => i.id == id); if (!file) return; uiPrompt(isWeblink ? 'Имя ссылки' : 'Имя файла', currentName, (n) => { renameItem('file', file, isWeblink ? n + '.weblink' : n); }); }
 
-        async function restoreItemById(id) { 
-            const file = allItems.find(i => i.id == id); 
-            if(!file) return;
-            
-            let tags = getItemPath(file);
-            const linkTag = extractHiddenLink(file);
-            if (linkTag) tags = tags ? tags + ',' + LINK_PREFIX + linkTag : LINK_PREFIX + linkTag;
+        async function restoreItemById(id) { const file = allItems.find(i => i.id == id); if(!file) return; let tags = getItemPath(file); const linkTag = extractHiddenLink(file); if (linkTag) tags = tags ? tags + ',' + LINK_PREFIX + linkTag : LINK_PREFIX + linkTag; showActionLoader(true, "ВОССТАНОВЛЕНИЕ..."); await apiFetch('/move', 'POST', { items: [{id: file.id, new_title: file.title, tags: tags}] }); showActionLoader(false); fetchFiles(); }
 
-            showActionLoader(true, "ВОССТАНОВЛЕНИЕ..."); 
-            await apiFetch('/move', 'POST', { items: [{id: file.id, new_title: file.title, tags: tags}] });
-            showActionLoader(false); 
-            fetchFiles(); 
-        }
-
-        async function deleteFileById(id) { 
-            showActionLoader(true, "СТИРАЮ..."); 
-            await apiFetch('/delete', 'POST', {doc_id:id});
-            showActionLoader(false); 
-            fetchFiles(); 
-        }
+        async function deleteFileById(id) { showActionLoader(true, "СТИРАЮ..."); await apiFetch('/delete', 'POST', {doc_id:id}); showActionLoader(false); fetchFiles(); }
 
         async function renameItem(type, item, newName) {
-            isActionActive = true; 
-            let list = [];
-            
-            // Фикс: удаляем запятые, чтобы ВК не путал папки
-            newName = newName.trim().replace(/,/g, ' '); 
-
-            if (type === 'file') {
-                const f = allItems.find(i => i.id === item.id) || item;
-                let tags = getItemPath(f);
-                const linkTag = extractHiddenLink(f);
-                if (linkTag) tags = tags ? tags + ',' + LINK_PREFIX + linkTag : LINK_PREFIX + linkTag;
-                list.push({id: f.id, new_title: newName, tags: tags});
-            } else {
-                const oldP = currentPath.length ? currentPath.join('/')+'/'+item : item;
-                const newP = currentPath.length ? currentPath.join('/')+'/'+newName : newName;
-                
-                allItems.filter(i => { 
-                    const p = getItemPath(i); 
-                    return p === oldP || p.startsWith(oldP+'/'); 
-                }).forEach(i => {
-                    let tags = newP + getItemPath(i).substring(oldP.length);
-                    const linkTag = extractHiddenLink(i);
-                    if (linkTag) tags = tags ? tags + ',' + LINK_PREFIX + linkTag : LINK_PREFIX + linkTag;
-                    list.push({id: i.id, new_title: i.title, tags: tags});
-                });
-            }
-            
+            isActionActive = true; let list = []; newName = newName.trim().replace(/,/g, ' '); 
+            if (type === 'file') { const f = allItems.find(i => i.id === item.id) || item; let tags = getItemPath(f); const linkTag = extractHiddenLink(f); if (linkTag) tags = tags ? tags + ',' + LINK_PREFIX + linkTag : LINK_PREFIX + linkTag; list.push({id: f.id, new_title: newName, tags: tags}); } else { const oldP = currentPath.length ? currentPath.join('/')+'/'+item : item; const newP = currentPath.length ? currentPath.join('/')+'/'+newName : newName; allItems.filter(i => { const p = getItemPath(i); return p === oldP || p.startsWith(oldP+'/'); }).forEach(i => { let tags = newP + getItemPath(i).substring(oldP.length); const linkTag = extractHiddenLink(i); if (linkTag) tags = tags ? tags + ',' + LINK_PREFIX + linkTag : LINK_PREFIX + linkTag; list.push({id: i.id, new_title: i.title, tags: tags}); }); }
             showActionLoader(true, `СИНХРОНИЗАЦИЯ (0/${list.length})...`);
-            for (let i = 0; i < list.length; i++) {
-                showActionLoader(true, `СИНХРОНИЗАЦИЯ (${i+1}/${list.length})...`);
-                await apiFetch('/move', 'POST', { items: [list[i]] });
-                await new Promise(r => setTimeout(r, 350));
-            }
-            showActionLoader(false); 
-            isActionActive = false; 
-            fetchFiles();
+            for (let i = 0; i < list.length; i++) { showActionLoader(true, `СИНХРОНИЗАЦИЯ (${i+1}/${list.length})...`); await apiFetch('/move', 'POST', { items: [list[i]] }); await new Promise(r => setTimeout(r, 350)); }
+            showActionLoader(false); isActionActive = false; fetchFiles();
         }
 
         async function bulkMoveToTrash() {
             let list = [];
             for (const idKey of selectedIds) {
                 const [type, id] = idKey.split(':');
-                if(type === 'file') { 
-                    const f = allItems.find(i => i.id == id); 
-                    if(f) {
-                        let tags = ".trash,original_path:" + getItemPath(f).replace(/,/g, ' ');
-                        const linkTag = extractHiddenLink(f);
-                        if (linkTag) tags += ',' + LINK_PREFIX + linkTag;
-                        list.push({id: f.id, new_title: f.title.replace(/,/g, ' '), tags: tags}); 
-                    }
-                } else { 
-                    const pref = currentPath.length ? currentPath.join('/')+'/'+id : id; 
-                    allItems.filter(i => { 
-                        const p = getItemPath(i); 
-                        return !isItemInTrash(i) && (p === pref || p.startsWith(pref+'/')); 
-                    }).forEach(i => { 
-                        let tags = ".trash,original_path:" + getItemPath(i).replace(/,/g, ' ');
-                        const linkTag = extractHiddenLink(i);
-                        if (linkTag) tags += ',' + LINK_PREFIX + linkTag;
-                        list.push({id: i.id, new_title: i.title.replace(/,/g, ' '), tags: tags}); 
-                    }); 
-                }
+                if(type === 'file') { const f = allItems.find(i => i.id == id); if(f) { let tags = ".trash,original_path:" + getItemPath(f).replace(/,/g, ' '); const linkTag = extractHiddenLink(f); if (linkTag) tags += ',' + LINK_PREFIX + linkTag; list.push({id: f.id, new_title: f.title.replace(/,/g, ' '), tags: tags}); } } else { const pref = currentPath.length ? currentPath.join('/')+'/'+id : id; allItems.filter(i => { const p = getItemPath(i); return !isItemInTrash(i) && (p === pref || p.startsWith(pref+'/')); }).forEach(i => { let tags = ".trash,original_path:" + getItemPath(i).replace(/,/g, ' '); const linkTag = extractHiddenLink(i); if (linkTag) tags += ',' + LINK_PREFIX + linkTag; list.push({id: i.id, new_title: i.title.replace(/,/g, ' '), tags: tags}); }); }
             }
-            
-            isActionActive = true; 
-            showActionLoader(true, `УДАЛЕНИЕ (0/${list.length})...`);
-            for (let i = 0; i < list.length; i++) {
-                showActionLoader(true, `УДАЛЕНИЕ (${i+1}/${list.length})...`);
-                await apiFetch('/move', 'POST', { items: [list[i]] });
-                await new Promise(r => setTimeout(r, 350));
-            }
-            toggleSelectionMode(); 
-            showActionLoader(false); 
-            isActionActive = false; 
-            fetchFiles();
+            isActionActive = true; showActionLoader(true, `УДАЛЕНИЕ (0/${list.length})...`);
+            for (let i = 0; i < list.length; i++) { showActionLoader(true, `УДАЛЕНИЕ (${i+1}/${list.length})...`); await apiFetch('/move', 'POST', { items: [list[i]] }); await new Promise(r => setTimeout(r, 350)); }
+            toggleSelectionMode(); showActionLoader(false); isActionActive = false; fetchFiles();
         }
 
         async function bulkRestore() {
             let list = [];
-            for (const idKey of selectedIds) {
-                const [type, id] = idKey.split(':');
-                if(type === 'file') { 
-                    const f = allItems.find(i => i.id == id); 
-                    if(f) {
-                        let tags = getItemPath(f);
-                        const linkTag = extractHiddenLink(f);
-                        if (linkTag) tags = tags ? tags + ',' + LINK_PREFIX + linkTag : LINK_PREFIX + linkTag;
-                        list.push({id: f.id, new_title: f.title, tags: tags}); 
-                    }
-                }
-            }
-            
-            isActionActive = true; 
-            showActionLoader(true, `ВОССТАНОВЛЕНИЕ (0/${list.length})...`);
-            for (let i = 0; i < list.length; i++) {
-                showActionLoader(true, `ВОССТАНОВЛЕНИЕ (${i+1}/${list.length})...`);
-                await apiFetch('/move', 'POST', { items: [list[i]] });
-                await new Promise(r => setTimeout(r, 350));
-            }
-            toggleSelectionMode(); 
-            showActionLoader(false); 
-            isActionActive = false; 
-            fetchFiles();
+            for (const idKey of selectedIds) { const [type, id] = idKey.split(':'); if(type === 'file') { const f = allItems.find(i => i.id == id); if(f) { let tags = getItemPath(f); const linkTag = extractHiddenLink(f); if (linkTag) tags = tags ? tags + ',' + LINK_PREFIX + linkTag : LINK_PREFIX + linkTag; list.push({id: f.id, new_title: f.title, tags: tags}); } } }
+            isActionActive = true; showActionLoader(true, `ВОССТАНОВЛЕНИЕ (0/${list.length})...`);
+            for (let i = 0; i < list.length; i++) { showActionLoader(true, `ВОССТАНОВЛЕНИЕ (${i+1}/${list.length})...`); await apiFetch('/move', 'POST', { items: [list[i]] }); await new Promise(r => setTimeout(r, 350)); }
+            toggleSelectionMode(); showActionLoader(false); isActionActive = false; fetchFiles();
         }
 
         async function bulkDeletePermanently() {
-            let list = [];
-            for (const idKey of selectedIds) {
-                const [type, id] = idKey.split(':');
-                if(type === 'file') { 
-                    const f = allItems.find(i => i.id == id); 
-                    if(f) list.push(f); 
-                }
-            }
-            
-            isActionActive = true; 
-            showActionLoader(true, `СТИРАЮ (0/${list.length})...`);
-            for (let i = 0; i < list.length; i++) {
-                showActionLoader(true, `СТИРАЮ (${i+1}/${list.length})...`);
-                await apiFetch('/delete', 'POST', { doc_id: list[i].id });
-                await new Promise(r => setTimeout(r, 350));
-            }
-            toggleSelectionMode(); 
-            showActionLoader(false); 
-            isActionActive = false; 
-            fetchFiles();
+            let list = []; for (const idKey of selectedIds) { const [type, id] = idKey.split(':'); if(type === 'file') { const f = allItems.find(i => i.id == id); if(f) list.push(f); } }
+            isActionActive = true; showActionLoader(true, `СТИРАЮ (0/${list.length})...`);
+            for (let i = 0; i < list.length; i++) { showActionLoader(true, `СТИРАЮ (${i+1}/${list.length})...`); await apiFetch('/delete', 'POST', { doc_id: list[i].id }); await new Promise(r => setTimeout(r, 350)); }
+            toggleSelectionMode(); showActionLoader(false); isActionActive = false; fetchFiles();
         }
 
         async function emptyTrash() {
-            const list = allItems.filter(i => isItemInTrash(i));
-            isActionActive = true; 
-            showActionLoader(true, `ОЧИСТКА (0/${list.length})...`);
-            for (let i = 0; i < list.length; i++) {
-                showActionLoader(true, `ОЧИСТКА (${i+1}/${list.length})...`);
-                await apiFetch('/delete', 'POST', {doc_id: list[i].id});
-                await new Promise(r => setTimeout(r, 350));
-            }
-            showActionLoader(false); 
-            isActionActive = false; 
-            fetchFiles();
+            const list = allItems.filter(i => isItemInTrash(i)); isActionActive = true; showActionLoader(true, `ОЧИСТКА (0/${list.length})...`);
+            for (let i = 0; i < list.length; i++) { showActionLoader(true, `ОЧИСТКА (${i+1}/${list.length})...`); await apiFetch('/delete', 'POST', {doc_id: list[i].id}); await new Promise(r => setTimeout(r, 350)); }
+            showActionLoader(false); isActionActive = false; fetchFiles();
         }
 
-        function downloadFile(u, t) {
-            const link = document.createElement('a');
-            link.href = `${API_URL}/download-proxy?url=${encodeURIComponent(u)}&title=${encodeURIComponent(t)}${VK_PARAMS.replace('?', '&')}`;
-            link.target = '_blank'; 
-            document.body.appendChild(link); 
-            link.click(); 
-            document.body.removeChild(link);
-        }
+        function downloadFile(u, t) { const link = document.createElement('a'); link.href = `${API_URL}/download-proxy?url=${encodeURIComponent(u)}&title=${encodeURIComponent(t)}${VK_PARAMS.replace('?', '&')}`; link.target = '_blank'; document.body.appendChild(link); link.click(); document.body.removeChild(link); }
 
-        // --- ЗАГРУЗКА ---
+        // ================= ЗАГРУЗКА ФАЙЛОВ =================
         function createFolder(n) { 
-            // Фикс: удаляем запятые, чтобы не сбивать теги
-            n = n.trim().replace(/,/g, ' ');
+            const clean = n.trim().replace(/,/g, ' '); 
+            const isUrl = /^(https?:\/\/[^\s]+)$/i.test(clean) || /^([a-zA-Z0-9а-яА-ЯёЁ-]+\.)+[a-zA-Zа-яА-ЯёЁ]{2,}(\/[^\s]*)?$/i.test(clean); 
             
-            const isUrl = /^(https?:\/\/[^\s]+)$/i.test(n) || /^([a-zA-Z0-9а-яА-ЯёЁ-]+\.)+[a-zA-Zа-яА-ЯёЁ]{2,}(\/[^\s]*)?$/i.test(n);
-            
-            if (isUrl && !n.includes(' ')) {
-                let urlToSave = n; 
-                if (!/^https?:\/\//i.test(urlToSave)) urlToSave = 'https://' + urlToSave;
+            if (isUrl && !clean.includes(' ')) { 
+                let urlToSave = clean; if (!/^https?:\/\//i.test(urlToSave)) urlToSave = 'https://' + urlToSave; 
+                let domain = "Ссылка"; try { domain = new URL(urlToSave).hostname.replace(/^www\./i, ''); } catch(e){} 
+                const file = new File([new Blob(["link"], { type: 'text/plain' })], `${domain}.weblink`, { type: 'text/plain' }); 
                 
-                let domain = "Ссылка"; 
-                try { domain = new URL(urlToSave).hostname.replace(/^www\./i, ''); } catch(e){}
+                if (queue.length === 0) uploadBatchTotal = 0;
+                uploadBatchTotal += 1;
+                queue.push({ file: file, status: "Ожидание", targetPath: currentPath.join('/'), linkUrl: urlToSave, batchIndex: uploadBatchTotal }); 
                 
-                const file = new File([new Blob(["link"], { type: 'text/plain' })], `${domain}.weblink`, { type: 'text/plain' });
-                
-                if (queue.length === 0) {
-                    uploadBatchTotal = 1;
-                    uploadBatchCurrent = 0;
-                } else {
-                    uploadBatchTotal += 1;
-                }
-                
-                queue.push({ file: file, status: "Ожидание", targetPath: currentPath.join('/'), linkUrl: urlToSave }); 
                 document.getElementById('progressContainer').classList.remove('hidden'); 
                 processQueue(); 
             } else { 
-                if(n) { currentPath.push(n); applyFilters(); }
-            }
+                if(clean) { currentPath.push(clean); applyFilters(); }
+            } 
         }
-        
+
         function handleFiles(files) { 
             const targetPath = currentPath.join('/'); 
+            if (queue.length === 0) uploadBatchTotal = 0;
             
-            if (queue.length === 0) {
-                uploadBatchTotal = files.length;
-                uploadBatchCurrent = 0;
-            } else {
-                uploadBatchTotal += files.length;
-            }
+            const startIndex = uploadBatchTotal;
+            uploadBatchTotal += files.length;
             
-            for (const f of files) {
-                queue.push({ file: f, status: "Ожидание", targetPath: targetPath }); 
+            for (let i = 0; i < files.length; i++) {
+                queue.push({ 
+                    file: files[i], 
+                    status: "Ожидание", 
+                    targetPath: targetPath,
+                    batchIndex: startIndex + i + 1 
+                }); 
             }
             
             document.getElementById('progressContainer').classList.remove('hidden'); 
@@ -1161,43 +568,34 @@
             
             while (queue.some(i => i.status === "Ожидание")) { 
                 let item = queue.find(i => i.status === "Ожидание");
-                uploadBatchCurrent++;
-                item.batchInfo = `${uploadBatchCurrent} из ${uploadBatchTotal}`;
-                
                 await uploadItem(item); 
-                await new Promise(r => setTimeout(r, 600)); 
+                await new Promise(r => setTimeout(r, 1500)); 
             } 
             
             isProcessing = false; 
             queue = [];
             uploadBatchTotal = 0;
-            uploadBatchCurrent = 0;
-            
             document.getElementById('progressContainer').classList.add('hidden'); 
             fetchFiles(); 
         }
 
         function uploadItem(item) {
-            return new Promise(resolve => {
+            return new Promise((resolve) => {
                 const doUpload = (captchaData = {}) => {
                     item.status = "Загрузка"; 
-                    
                     const fd = new FormData(); 
+                    
                     fd.append("file", item.file); 
-                    
-                    // Фикс кириллицы (отправляем чистый текст) + убираем запятые
                     const cleanName = item.file.name.replace(/,/g, ' ');
-                    fd.append("original_name", cleanName);
+                    fd.append("original_name", cleanName); 
                     
-                    let finalPath = item.targetPath || "";
-                    if (item.linkUrl) {
-                        finalPath = finalPath ? finalPath + "," + LINK_PREFIX + item.linkUrl : LINK_PREFIX + item.linkUrl;
-                    }
+                    let finalPath = item.targetPath || ""; 
+                    if (item.linkUrl) finalPath = finalPath ? finalPath + "," + LINK_PREFIX + item.linkUrl : LINK_PREFIX + item.linkUrl; 
                     fd.append("folder_path", finalPath); 
                     
-                    if (captchaData.captcha_sid) {
-                        fd.append("captcha_sid", captchaData.captcha_sid);
-                        fd.append("captcha_key", captchaData.captcha_key);
+                    if (captchaData.captcha_sid) { 
+                        fd.append("captcha_sid", captchaData.captcha_sid); 
+                        fd.append("captcha_key", captchaData.captcha_key); 
                     }
                     
                     const x = new XMLHttpRequest(); 
@@ -1207,9 +605,7 @@
                         const p = Math.round((e.loaded/e.total)*100); 
                         document.getElementById('progressBar').style.width = p+'%'; 
                         document.getElementById('progressPercent').innerText = p+'%'; 
-                        
-                        // Широкий вывод текста
-                        document.getElementById('progressText').innerText = `${item.batchInfo} • ${cleanName}`; 
+                        document.getElementById('progressText').innerText = `${item.batchIndex} из ${uploadBatchTotal} • ${cleanName}`; 
                     };
                     
                     x.onload = async () => { 
@@ -1217,18 +613,18 @@
                             item.status = "Готово"; 
                             resolve(); 
                         } else if (x.status === 403) {
-                            try {
-                                const data = JSON.parse(x.responseText);
-                                if (data.type === "captcha") {
-                                    triggerCaptchaUI("ВВЕДИТЕ КОД!");
-                                    const solved = await showCaptchaModal(data.sid, data.img);
-                                    resetCaptchaUI();
-                                    doUpload(solved);
-                                    return;
-                                }
-                            } catch (err) {}
-                            item.status = "Ожидание";
-                            resolve();
+                            try { 
+                                const data = JSON.parse(x.responseText); 
+                                if (data.type === "captcha") { 
+                                    triggerCaptchaUI("НУЖНА ПРОВЕРКА!"); 
+                                    const solved = await showCaptchaModal(data.sid, data.img); 
+                                    resetCaptchaUI(); 
+                                    doUpload(solved); 
+                                    return; 
+                                } 
+                            } catch(e) {}
+                            item.status = "Ожидание"; 
+                            resolve(); 
                         } else { 
                             item.status = "Ожидание"; 
                             triggerCaptchaUI("ОШИБКА СЕРВЕРА"); 
@@ -1236,19 +632,18 @@
                             resolve(); 
                         } 
                     };
-                    
                     x.onerror = () => { 
                         item.status = "Ожидание"; 
                         triggerCaptchaUI("СБОЙ СЕТИ!"); 
                         setTimeout(resetCaptchaUI, 2000); 
                         resolve(); 
                     }; 
-                    
                     x.send(fd);
                 };
                 doUpload();
             });
         }
+        // ================= КОНЕЦ БЛОКА ЗАГРУЗКИ =================
 
         // --- ВНЕШНИЕ ССЫЛКИ И ДОКУМЕНТЫ ---
         async function handleWeblinkAction(fileUrl, title, action) {
@@ -1259,17 +654,9 @@
                 actualLink = actualLink.trim().replace(/^['"]|['"]$/g, ''); 
                 showActionLoader(false);
                 
-                if (!actualLink || !actualLink.startsWith('http')) {
-                    return uiAlert('Ошибка чтения', 'Не удалось прочитать ссылку.');
-                }
-
-                if (action === 'open') window.open(actualLink, '_blank');
-                else if (action === 'share') uiCopyLink(actualLink);
-            } catch (e) { 
-                showActionLoader(false); 
-                uiAlert('Ошибка', 'Не удалось прочитать ссылку через сервер.'); 
-                console.error(e); 
-            }
+                if (!actualLink || !actualLink.startsWith('http')) return uiAlert('Ошибка чтения', 'Не удалось прочитать ссылку.');
+                if (action === 'open') window.open(actualLink, '_blank'); else if (action === 'share') uiCopyLink(actualLink);
+            } catch (e) { showActionLoader(false); uiAlert('Ошибка', 'Не удалось прочитать ссылку через сервер.'); }
         }
 
         function handlePreview(url, ext, title, ownerId, docId) {
@@ -1283,78 +670,27 @@
             const isPdf = ext === 'pdf';
             const isVideo = ['mp4', 'mov', 'webm', 'avi', 'mkv'].includes(ext);
 
-            // PDF/Архивы/Офис на компьютере открываем в родном окне ВК
-            if (isPC && (isOffice || isArchive || isPdf) && ownerId && docId && ownerId !== 'undefined') {
-                window.open(`https://vk.com/doc${ownerId}_${docId}`, '_blank');
-                return;
-            }
+            if (isPC && (isOffice || isArchive || isPdf) && ownerId && docId && ownerId !== 'undefined') { window.open(`https://vk.com/doc${ownerId}_${docId}`, '_blank'); return; }
 
-            let targetUrl = url;
-            let type = 'doc';
-
-            if (isOffice) {
-                type = 'office';
-                targetUrl = isIOS 
-                    ? `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}&wdMobile=1`
-                    : `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(url)}`;
-            } else if (isText || isPdf) {
-                type = 'google';
-                targetUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
-            } else if (isVideo) {
-                type = 'video';
-                targetUrl = url; 
-            }
+            let targetUrl = url; let type = 'doc';
+            if (isOffice) { type = 'office'; targetUrl = isIOS ? `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}&wdMobile=1` : `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(url)}`; } 
+            else if (isText || isPdf) { type = 'google'; targetUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`; } 
+            else if (isVideo) { type = 'video'; targetUrl = url; }
 
             if (isIOS) {
                 document.getElementById('docTitle').innerText = title || 'Просмотр';
-                const iframe = document.getElementById('docIframe'); 
-                const video = document.getElementById('docVideo');
-                const extLink = document.getElementById('docExternalLink');
+                const iframe = document.getElementById('docIframe'); const video = document.getElementById('docVideo'); const extLink = document.getElementById('docExternalLink');
                 
-                if (type === 'video') {
-                    iframe.classList.add('hidden');
-                    video.classList.remove('hidden');
-                    video.src = targetUrl;
-                } else {
-                    video.classList.add('hidden');
-                    video.pause();
-                    iframe.classList.remove('hidden');
-                    iframe.className = "w-full h-full border-none bg-white";
-                    
-                    if (type === 'office') {
-                        iframe.classList.add('office-zoom-hack');
-                    } else {
-                        iframe.classList.remove('office-zoom-hack');
-                    }
-                    iframe.src = targetUrl;
-                }
+                if (type === 'video') { iframe.classList.add('hidden'); video.classList.remove('hidden'); video.src = targetUrl; } 
+                else { video.classList.add('hidden'); video.pause(); iframe.classList.remove('hidden'); iframe.className = "w-full h-full border-none bg-white"; if (type === 'office') iframe.classList.add('office-zoom-hack'); else iframe.classList.remove('office-zoom-hack'); iframe.src = targetUrl; }
                 
-                if (extLink) { 
-                    extLink.href = targetUrl; 
-                    extLink.classList.remove('hidden'); 
-                }
-                
+                if (extLink) { extLink.href = targetUrl; extLink.classList.remove('hidden'); }
                 document.getElementById('docModal').classList.remove('hidden');
-            } else {
-                window.open(targetUrl, '_blank');
-            }
+            } else { window.open(targetUrl, '_blank'); }
         }
 
-        function closeDocModal() { 
-            document.getElementById('docModal').classList.add('hidden'); 
-            const iframe = document.getElementById('docIframe');
-            iframe.src = ''; 
-            iframe.className = "w-full h-full border-none"; 
-            const video = document.getElementById('docVideo');
-            video.pause();
-            video.src = '';
-        }
-
-        function previewImage(url) {
-            vkBridge.send("VKWebAppShowImages", { images: [url] }).catch(() => {
-                window.open(url, '_blank');
-            });
-        }
+        function closeDocModal() { document.getElementById('docModal').classList.add('hidden'); const iframe = document.getElementById('docIframe'); iframe.src = ''; iframe.className = "w-full h-full border-none"; const video = document.getElementById('docVideo'); video.pause(); video.src = ''; }
+        function previewImage(url) { vkBridge.send("VKWebAppShowImages", { images: [url] }).catch(() => { window.open(url, '_blank'); }); }
     </script>
 </body>
 </html>
